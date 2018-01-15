@@ -6,6 +6,8 @@ description = "Sorta Text Format in UTF-8"
 keywords = [
     "unicode",
     "utf8",
+    "utf-8",
+    "text",
     "binary",
 ]
 license = "MIT OR Apache-2.0"

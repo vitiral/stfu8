@@ -35,7 +35,7 @@ pub struct DecodeError {
     pub index: usize,
 }
 
-/// Decode a utf8 string containing encoded STFU-8 into binary.
+/// Decode a UTF-8 string containing encoded STFU-8 into binary.
 ///
 /// # Examples
 /// ```rust
@@ -44,6 +44,10 @@ pub struct DecodeError {
 /// # fn main() {
 /// let expected = b"foo\xFF\nbar";
 /// let encoded = stfu8::encode_pretty(expected);
+/// assert_eq!(
+///     encoded,
+///     "foo\\xFF\nbar"
+/// );
 /// assert_eq!(
 ///     expected,
 ///     stfu8::decode(&encoded).unwrap().as_slice()
