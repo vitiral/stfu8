@@ -23,13 +23,6 @@ lazy_static! {
         "#).unwrap();
 }
 
-const INDEX_TAB: usize = 1;
-const INDEX_NEWLINE: usize = 2;
-const INDEX_LINEFEED: usize = 3;
-const INDEX_BACKSLASH: usize = 4;
-const INDEX_HEX: usize = 5;
-const INDEX_INVALID: usize = 6;
-
 #[derive(Debug)]
 pub struct DecodeError {
     pub index: usize,

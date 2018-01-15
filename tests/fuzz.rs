@@ -5,7 +5,6 @@ extern crate proptest;
 extern crate stfu8;
 
 use std::str;
-use proptest::prelude::*;
 
 fn assert_round(v: &[u8]) {
     let encoded = stfu8::encode(v);

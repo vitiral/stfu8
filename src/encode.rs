@@ -9,107 +9,11 @@
 //! This code is practically copy/pasted from the rust std libraries'
 //! `run_utf8_validation` function, used by `str::from_utf8`.
 
-// FIXME: need to still work around some compiler intrinsics
-#![allow(dead_code)]
-
-use std::fmt;
 use std::io::Write;
-use std::str;
-
-/*
-Section: Creating a string
-*/
-
-/// Errors which can occur when attempting to interpret a sequence of [`u8`]
-/// as a string.
-///
-/// [`u8`]: ../../std/primitive.u8.html
-///
-/// As such, the `from_utf8` family of functions and methods for both [`String`]s
-/// and [`&str`]s make use of this error, for example.
-///
-/// [`String`]: ../../std/string/struct.String.html#method.from_utf8
-/// [`&str`]: ../../std/str/fn.from_utf8.html
-#[derive(Copy, Eq, PartialEq, Clone, Debug)]
-pub struct Utf8Error {
-    valid_up_to: usize,
-    error_len: Option<u8>,
-}
-
-impl Utf8Error {
-    /// Returns the index in the given string up to which valid UTF-8 was
-    /// verified.
-    ///
-    /// It is the maximum index such that `from_utf8(&input[..index])`
-    /// would return `Ok(_)`.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use std::str;
-    ///
-    /// // some invalid bytes, in a vector
-    /// let sparkle_heart = vec![0, 159, 146, 150];
-    ///
-    /// // std::str::from_utf8 returns a Utf8Error
-    /// let error = str::from_utf8(&sparkle_heart).unwrap_err();
-    ///
-    /// // the second byte is invalid here
-    /// assert_eq!(1, error.valid_up_to());
-    /// ```
-    pub fn valid_up_to(&self) -> usize {
-        self.valid_up_to
-    }
-
-    /// Provide more information about the failure:
-    ///
-    /// * `None`: the end of the input was reached unexpectedly.
-    ///   `self.valid_up_to()` is 1 to 3 bytes from the end of the input.
-    ///   If a byte stream (such as a file or a network socket) is being decoded incrementally,
-    ///   this could be a valid `char` whose UTF-8 byte sequence is spanning multiple chunks.
-    ///
-    /// * `Some(len)`: an unexpected byte was encountered.
-    ///   The length provided is that of the invalid byte sequence
-    ///   that starts at the index given by `valid_up_to()`.
-    ///   Decoding should resume after that sequence
-    ///   (after inserting a U+FFFD REPLACEMENT CHARACTER) in case of lossy decoding.
-    pub fn error_len(&self) -> Option<usize> {
-        self.error_len.map(|len| len as usize)
-    }
-}
-
-impl fmt::Display for Utf8Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(error_len) = self.error_len {
-            write!(
-                f,
-                "invalid utf-8 sequence of {} bytes from index {}",
-                error_len, self.valid_up_to
-            )
-        } else {
-            write!(
-                f,
-                "incomplete utf-8 byte sequence from index {}",
-                self.valid_up_to
-            )
-        }
-    }
-}
 
 /*
 Section: UTF-8 validation
 */
-
-// use truncation to fit u64 into usize
-const NONASCII_MASK: usize = 0x80808080_80808080u64 as usize;
-
-/// Returns `true` if any byte in the word `x` is nonascii (>= 128).
-#[inline]
-fn contains_nonascii(x: usize) -> bool {
-    (x & NONASCII_MASK) != 0
-}
 
 /// Pretty much an exact copy of `run_utf8_validation` from the rust stdlib.
 pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
@@ -273,12 +177,6 @@ static UTF8_CHAR_WIDTH: [u8; 256] = [
 4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0, // 0xFF
 ];
 
-/// Given a first byte, determines how many bytes are in this UTF-8 character.
-#[inline]
-pub fn utf8_char_width(b: u8) -> usize {
-    return UTF8_CHAR_WIDTH[b as usize] as usize;
-}
-
 /// Mask of the value bits of a continuation byte.
 const CONT_MASK: u8 = 0b0011_1111;
 /// Value of the tag bits (tag mask is !CONT_MASK) of a continuation byte.
@@ -289,7 +187,7 @@ fn sanity_encode() {
     fn enc(s: &str) -> String {
         let out = encode(&super::Encoder::new(), s.as_bytes());
         // validation, we may use from_utf8_unchecked in the future
-        let _ = str::from_utf8(&out.as_bytes()).unwrap();
+        let _ = ::std::str::from_utf8(&out.as_bytes()).unwrap();
         out
     }
     fn assert_enc(s: &str) {
