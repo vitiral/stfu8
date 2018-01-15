@@ -1,0 +1,14 @@
+[package]
+authors = ["Garrett Berg <googberg@gmail.com>"]
+name = "stfu8"
+version = "0.1.0"
+
+[dependencies]
+lazy_static = "1.0.0"
+regex = "0.2.5"
+
+[dev-dependencies]
+pretty_assertions = "0.4.1"
+proptest = "0.3.4"
+rand = "0.4.2"
+regex_generate = "0.2.0"
