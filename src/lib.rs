@@ -19,7 +19,7 @@ mod encode;
 
 pub use decode::{decode, DecodeError};
 
-/// Encode text as stfu8, escaping all non-printable characters.
+/// Encode text as STFU-8, escaping all non-printable characters.
 ///
 /// # Examples
 /// ```rust
@@ -38,7 +38,7 @@ pub fn encode(v: &[u8]) -> String {
     encode::encode(&encoder, v)
 }
 
-/// Decode stfu8 text as binary, escaping all non-printable characters EXCEPT:
+/// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
 /// - `\t`: tab
 /// - `\n`: line feed
 /// - `\r`: cariage return

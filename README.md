@@ -1,6 +1,6 @@
-# STFU8: Sorta Text Format in UTF-8
+# STFU-8: Sorta Text Format in UTF-8
 
-STFU8 is a hacky text encoding/decoding protocol for data that might be *not
+STFU-8 is a hacky text encoding/decoding protocol for data that might be *not
 quite* UTF8 but is still mostly UTF8. It is based on the syntax of the `repr`
 created when you write (or print) binary text in python, C or other common
 programming languages.
@@ -18,7 +18,7 @@ Comparision to other formats:
     compliant).
   - There might be other cases you can think of or want to create. In general,
     try _not_ to create more use cases if you don't have to.
-- **STFU8**: is "good" when you want data is mostly UTF8 text that might have a
+- **STFU-8**: is "good" when you want data is mostly UTF8 text that might have a
   couple of binary pieces. It is especailly good if you want to support hand
   writing text combined with binary sequences and then decoding back to full
   binary. It has _very poor_ if your data is actually binary, requiring (
@@ -36,7 +36,7 @@ Comparision to other formats:
 [1]: https://simonsapin.github.io/wtf-8/
 
 # Specification (lol)
-In simple terms, encoded STFU8 is itself *always valid unicode* which decodes
+In simple terms, encoded STFU-8 is itself *always valid unicode* which decodes
 to binary (the binary is not necessarily UTF8). It differs from unicode in
 that single `\` items are illegal. The following patterns are legal:
 - `\\`: decodes to the backward-slash (`\`) byte (`\x5c`)
@@ -63,7 +63,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 
-The STFU8 protocol/specification(lol) itself (including the name) is licensed
+The STFU-8 protocol/specification(lol) itself (including the name) is licensed
 under CC0 Community commons and anyone should be able to reimplement or change
 it for any purpose without need of attribution. However, using the same name
 for a completely different protocol would probably confuse people so please

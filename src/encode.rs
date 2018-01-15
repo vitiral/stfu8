@@ -149,7 +149,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
         }}}
 
         /// Escape everything from old_offset to current index.
-        /// It is invalid stfu8 (which might be invalid utf8,
+        /// It is invalid STFU-8 (which might be invalid utf8,
         /// or could just be the `\` character...)
         macro_rules! escape_them { () => {{
             for i in old_offset..(index+1) {
