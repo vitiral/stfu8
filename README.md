@@ -21,7 +21,7 @@ Comparision to other formats:
   - There might be other cases you can think of or want to create. In general,
     try _not_ to create more use cases if you don't have to.
 - **STFU-8**: is "good" when you want data is mostly UTF-8 text that might have a
-  couple of binary pieces. It is especailly good if you want to support hand
+  couple of binary pieces. It is especially good if you want to support hand
   writing text combined with binary sequences and then decoding back to full
   binary. It has _very poor_ if your data is actually binary, requiring (
   on average) _4 bytes_ per byte of binary.
