@@ -323,3 +323,10 @@ fn sanity_encode_binary() {
     bytes.extend_from_slice("¤ ¥ ¦".as_bytes());
     assert_eq!(encode(&super::Encoder::new(), &bytes), r"¡ ¢ £\t\n\r\x07\x7F\xFE¤ ¥ ¦");
 }
+
+#[test]
+fn sanity_encode_pretty() {
+    let expected = "foo\nbar\n";
+    let result = encode(&super::Encoder::pretty(), expected.as_bytes());
+    assert_eq!(expected, result);
+}

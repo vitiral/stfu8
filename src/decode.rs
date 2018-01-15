@@ -34,6 +34,20 @@ pub struct DecodeError {
 }
 
 /// Decode a utf8 string containing encoded stfu8 into binary.
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let expected = b"foo\xFF\nbar";
+/// let encoded = stfu8::encode_pretty(expected);
+/// assert_eq!(
+///     expected,
+///     stfu8::decode(&encoded).unwrap().as_slice()
+/// );
+/// # }
+/// ```
 pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
     // keep track of the last index observed
     let mut last_end = 0;

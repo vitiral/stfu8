@@ -4,10 +4,10 @@ name = "stfu8"
 version = "0.1.0"
 
 [dependencies]
-lazy_static = "1.0.0"
-regex = "0.2.5"
+regex = "^0.2.0"
 
 [dev-dependencies]
+lazy_static = "1.0.0"
 pretty_assertions = "0.4.1"
 proptest = "0.3.4"
 rand = "0.4.2"

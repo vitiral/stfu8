@@ -19,6 +19,52 @@ mod encode;
 
 pub use decode::decode;
 
+/// Encode text as stfu8, escaping all non-printable characters.
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let encoded = stfu8::encode(b"foo\xFF\nbar");
+/// assert_eq!(
+///     encoded,
+///     r"foo\xFF\nbar" // notice the `r` == raw string
+/// );
+/// # }
+/// ```
+pub fn encode(v: &[u8]) -> String {
+    let encoder = Encoder::new();
+    encode::encode(&encoder, v)
+}
+
+/// Decode stfu8 text as binary, escaping all non-printable characters EXCEPT:
+/// - `\t`: tab
+/// - `\n`: line feed
+/// - `\r`: cariage return
+///
+/// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
+/// other non-printable characters.
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let encoded = stfu8::encode_pretty(b"foo\xFF\nbar");
+/// assert_eq!(
+///     encoded,
+///     "foo\\xFF\nbar"
+/// );
+/// # }
+/// ```
+pub fn encode_pretty(v: &[u8]) -> String {
+    let encoder = Encoder::pretty();
+    encode::encode(&encoder, v)
+}
+
+// NOT YET STABILIZED
+
 /// Settings for encoding binary data.
 ///
 /// TODO: make this public eventually
@@ -27,6 +73,7 @@ pub(crate) struct Encoder {
     pub(crate) encode_line_feed: bool,    // \n \x0A
     pub(crate) encode_cariage: bool,      // \r \x0D
 }
+
 
 impl Encoder {
     /// Create a new "non pretty" `Encoder`.
@@ -53,20 +100,4 @@ impl Encoder {
             encode_cariage: false,
         }
     }
-}
-
-
-/// Encode text as stfu8, escaping all non-printable characters.
-pub fn encode(v: &[u8]) -> String {
-    let encoder = Encoder::new();
-    encode::encode(&encoder, v)
-}
-
-/// Decode stfu8 text as binary, escapting all non-printable characters EXCEPT:
-/// - `\t`: tab
-/// - `\n`: line feed
-/// - `\r`: cariage return
-pub fn encode_pretty(v: &[u8]) -> String {
-    let encoder = Encoder::pretty();
-    encode::encode(&encoder, v)
 }
