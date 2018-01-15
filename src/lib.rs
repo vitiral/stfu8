@@ -17,7 +17,7 @@ extern crate pretty_assertions;
 mod decode;
 mod encode;
 
-pub use decode::decode;
+pub use decode::{decode, DecodeError};
 
 /// Encode text as stfu8, escaping all non-printable characters.
 ///

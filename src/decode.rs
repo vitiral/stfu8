@@ -8,6 +8,8 @@
 
 use regex::Regex;
 use std::char;
+use std::error::Error;
+use std::fmt;
 
 lazy_static! {
     static ref ESCAPED_RE: Regex = Regex::new(
@@ -83,6 +85,19 @@ pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
 /// Convert a hexidecimal character (`0-F`) into it's corresponding numerical value (0-15)
 fn from_hex(b: u8) -> u8 {
     (b as char).to_digit(16).unwrap() as u8
+}
+
+impl Error for DecodeError {
+    fn description(&self) -> &str {
+        "failure decoding as STFU8"
+    }
+}
+
+impl fmt::Display for DecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Failed decoding, found invalid byte at index={}",
+               self.index)
+    }
 }
 
 #[cfg(test)]
