@@ -87,6 +87,7 @@ mod tests {
         assert_round(expected.as_bytes());
     }
 
+    #[test]
     fn sanity_roundtrip() {
         assert_round(b"");
         assert_round(b"foo");
