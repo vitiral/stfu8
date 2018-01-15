@@ -1,5 +1,7 @@
 # STFU-8: Sorta Text Format in UTF-8
 
+[![Build Status](https://travis-ci.org/vitiral/stfu8.svg?branch=master)](https://travis-ci.org/vitiral/stfu8)
+
 STFU-8 is a hacky text encoding/decoding protocol for data that might be *not
 quite* UTF8 but is still mostly UTF8. It is based on the syntax of the `repr`
 created when you write (or print) binary text in python, C or other common

@@ -1,6 +1,6 @@
 [package]
 name = "stfu8"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Garrett Berg <googberg@gmail.com>"]
 description = "Sorta Text Format in UTF-8"
 keywords = [
@@ -13,9 +13,13 @@ readme = "README.md"
 documentation = "https://docs.rs/stfu8"
 repository = "https://github.com/vitiral/stfu8"
 
+[badges]
+travis-ci = { repository = "vitiral/stfu8" }
+appveyor = { repository = "vitiral/stfu8" }
+
 [dependencies]
-regex = "^0.2.0"
-lazy_static = "1.0.0"
+regex = ">=0.2.0"
+lazy_static = ">=1.0.0"
 
 [dev-dependencies]
 pretty_assertions = "0.4.1"

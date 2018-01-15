@@ -35,7 +35,7 @@ pub struct DecodeError {
     pub index: usize,
 }
 
-/// Decode a utf8 string containing encoded stfu8 into binary.
+/// Decode a utf8 string containing encoded STFU-8 into binary.
 ///
 /// # Examples
 /// ```rust

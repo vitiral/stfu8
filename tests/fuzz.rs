@@ -4,15 +4,22 @@ extern crate pretty_assertions;
 extern crate proptest;
 extern crate stfu8;
 
+use std::str;
 use proptest::prelude::*;
 
 fn assert_round(v: &[u8]) {
-    let result = stfu8::decode(&stfu8::encode(v)).unwrap();
+    let encoded = stfu8::encode(v);
+    // validation, we may use from_utf8_unchecked in the future
+    let _ = str::from_utf8(&encoded.as_bytes()).unwrap();
+    let result = stfu8::decode(&encoded).unwrap();
     assert_eq!(v, result.as_slice());
 }
 
 fn assert_round_pretty(v: &[u8]) {
-    let result = stfu8::decode(&stfu8::encode_pretty(v)).unwrap();
+    let encoded = stfu8::encode_pretty(v);
+    // validation, we may use from_utf8_unchecked in the future
+    let _ = str::from_utf8(&encoded.as_bytes()).unwrap();
+    let result = stfu8::decode(&encoded).unwrap();
     assert_eq!(v, result.as_slice());
 }
 

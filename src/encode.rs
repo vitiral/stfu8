@@ -14,6 +14,7 @@
 
 use std::fmt;
 use std::io::Write;
+use std::str;
 
 /*
 Section: Creating a string
@@ -286,7 +287,10 @@ const TAG_CONT_U8: u8 = 0b1000_0000;
 #[test]
 fn sanity_encode() {
     fn enc(s: &str) -> String {
-        encode(&super::Encoder::new(), s.as_bytes())
+        let out = encode(&super::Encoder::new(), s.as_bytes());
+        // validation, we may use from_utf8_unchecked in the future
+        let _ = str::from_utf8(&out.as_bytes()).unwrap();
+        out
     }
     fn assert_enc(s: &str) {
         assert_eq!(enc(s), s);

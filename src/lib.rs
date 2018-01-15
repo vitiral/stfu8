@@ -5,7 +5,16 @@
  * http://opensource.org/licenses/MIT>, at your option. This file may not be
  * copied, modified, or distributed except according to those terms.
  */
-
+//! # STFU-8: Sorta Text Format in UTF-8
+//! Basically STFU-8 is the text format you already write when use escape codes in C, python, rust,
+//! etc.
+//!
+//! It permits binary data in UTF-8 by escaping them with `\`, for instance `\n` and `\x0F`.
+//!
+//! See the documentation for [`encode`](fn.encode.html) and [`decode`](fn.encode.html)
+//! for how to use the library.
+//!
+//! Also consider [starring the project on github](https://github.com/vitiral/stfu8)
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
@@ -20,6 +29,8 @@ mod encode;
 pub use decode::{decode, DecodeError};
 
 /// Encode text as STFU-8, escaping all non-printable characters.
+///
+/// > Also check out [`encode_pretty`](fn.encode_pretty.html)
 ///
 /// # Examples
 /// ```rust
@@ -45,6 +56,8 @@ pub fn encode(v: &[u8]) -> String {
 ///
 /// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
 /// other non-printable characters.
+///
+/// > Also check out [`encode`](fn.encode.html)
 ///
 /// # Examples
 /// ```rust
