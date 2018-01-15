@@ -23,6 +23,7 @@ extern crate regex;
 #[macro_use]
 extern crate pretty_assertions;
 
+mod helpers;
 mod decode;
 mod encode;
 

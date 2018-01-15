@@ -7,9 +7,10 @@
  */
 
 use regex::Regex;
-use std::char;
 use std::error::Error;
 use std::fmt;
+
+use helpers::from_hex2;
 
 lazy_static! {
     static ref ESCAPED_RE: Regex = Regex::new(
@@ -19,6 +20,7 @@ lazy_static! {
         \\r|                # repr linefeed
         \\\\|               # repr backslash
         \\x[0-9a-fA-F]{2}|  # repr hex-byte
+        \\u[0-9a-fA-F]{6}|  # repr code point
         \\                  # INVALID
         "#).unwrap();
 }
@@ -56,32 +58,34 @@ pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
         let start = mat.start();
         // push bytes that didn't need to be escaped
         out.extend_from_slice(&v[last_end..start]);
-        match mat.as_str() {
+        if mat.as_str() == "\\" {
+            return Err(DecodeError { index: start });
+        }
+
+        match &mat.as_str()[..2] {
             "\\t" => out.push(b'\t'),
             "\\n" => out.push(b'\n'),
             "\\r" => out.push(b'\r'),
             "\\\\" => out.push(b'\\'),
-            "\\" => return Err(DecodeError { index: start }),
-            hex => {
-                let hex = hex.as_bytes();
-                debug_assert_eq!(4, hex.len());
-                debug_assert_eq!(b'\\', hex[0]);
-                debug_assert_eq!(b'x', hex[1]);
-                let byte: u8 = (from_hex(hex[2]) << 4) + from_hex(hex[3]);
-                out.push(byte);
+            "\\x" => {
+                out.push(from_hex2(&mat.as_str().as_bytes()[2..]))
             }
+            "\\u" => {
+                // it will handle \u even though the roundtrip will be invalid.
+                let hex6 = &mat.as_str().as_bytes()[2..];
+                debug_assert_eq!(6, hex6.len());
+                out.push(0); // \u is used to specify a u32 character
+                out.push(from_hex2(&hex6[0..2]));
+                out.push(from_hex2(&hex6[2..4]));
+                out.push(from_hex2(&hex6[4..]));
+            },
+            _ => unreachable!("disallowed by regex"),
         }
         last_end = mat.end();
     }
     let len = v.len();
     out.extend_from_slice(&v[last_end..len]);
     Ok(out)
-}
-
-#[inline(always)]
-/// Convert a hexidecimal character (`0-F`) into it's corresponding numerical value (0-15)
-fn from_hex(b: u8) -> u8 {
-    (b as char).to_digit(16).unwrap() as u8
 }
 
 impl Error for DecodeError {
@@ -131,5 +135,13 @@ mod tests {
         assert_round_str("                          ​ ‌ ‍ ‎ ‏ ‐ ");
         assert_round_str("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");;
         assert_round_str("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
+    }
+
+    #[test]
+    fn sanity_code_point() {
+        assert_eq!(
+            decode(r"foo\u00f372").unwrap(),
+            /*  */ b"foo\x00\x00\xf3\x72"
+        );
     }
 }
