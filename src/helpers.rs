@@ -65,6 +65,7 @@ pub(crate) fn to_utf16(c: char, dst: &mut [u16]) -> &mut [u16] {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn utf8_to_utf16(s: &str) -> Vec<u16> {
     let mut utf16: Vec<u16> = Vec::new();
     for c in s.chars() {

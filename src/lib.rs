@@ -25,6 +25,7 @@ extern crate regex;
 extern crate pretty_assertions;
 
 use std::u8;
+use std::u16;
 
 mod helpers;
 mod decode;
@@ -131,11 +132,25 @@ pub fn encode_u16(v: &[u16]) -> String {
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// // let encoded = stfu8::encode_u16_pretty(b"foo\xFF\nbar");
-/// // assert_eq!(
-/// //     encoded,
-/// //     "foo\\xFF\nbar"
-/// // );
+/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
+///     .iter()
+///     .map(|b| *b as u16)
+///     .collect();
+///
+/// // Make it ill formed UTF-16
+/// ill.push(0xD800);       // surrogate pair lead
+/// ill.push(b' ' as u16);  // NOT a trail
+/// ill.push(0xDEED);       // Trail... with no lead
+/// ill.push(b' ' as u16);
+/// ill.push(0xDABA);       // lead... but end of str
+/// let encoded = stfu8::encode_u16_pretty(ill.as_slice());
+///
+/// // Note that 0xFF is the valid character "ÿ"
+/// // and the ill-formed characters are escaped.
+/// assert_eq!(
+///     encoded,
+///     "fooÿ\nbar\\u00D800 \\u00DEED \\u00DABA"
+/// );
 /// # }
 /// ```
 pub fn encode_u16_pretty(v: &[u16]) -> String {
@@ -180,6 +195,66 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                 },
                 decode::PushGeneric::String(s) => {
                     out.extend_from_slice(&s.as_bytes());
+                    Ok(())
+                }
+            }
+        };
+        decode::decode_generic(f, s)?;
+    }
+    Ok(out)
+}
+
+/// Decode a UTF-8 string containing encoded STFU-8 into a `Vec<u16>`.
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
+///     .iter()
+///     .map(|b| *b as u16)
+///     .collect();
+///
+/// // Make it ill formed UTF-16
+/// ill.push(0xD800);       // surrogate pair lead
+/// ill.push(b' ' as u16);  // NOT a trail
+/// ill.push(0xDEED);       // Trail... with no lead
+/// ill.push(b' ' as u16);
+/// ill.push(0xDABA);       // lead... but end of str
+/// let encoded = stfu8::encode_u16(ill.as_slice());
+///
+/// // Note that 0xFF is the valid character "ÿ"
+/// // and the ill-formed characters are escaped.
+/// assert_eq!(
+///     encoded,
+///     r"fooÿ\nbar\u00D800 \u00DEED \u00DABA"
+/// );
+///
+/// assert_eq!(ill, stfu8::decode_u16(&encoded).unwrap());
+/// # }
+/// ```
+pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
+    let mut out: Vec<u16> = Vec::new();
+    {
+        let f = |val: decode::PushGeneric| -> Result<(), DecodeError> {
+            match val {
+                decode::PushGeneric::Value{val, start} => {
+                    if val > u16::MAX as u32 {
+                        Err(DecodeError {
+                            index: start,
+                            kind: DecodeErrorKind::InvalidValue,
+                        })
+                    } else {
+                        out.push(val as u16);
+                        Ok(())
+                    }
+                },
+                decode::PushGeneric::String(s) => {
+                    for c in s.chars() {
+                        let mut buf = [0u16; 2];
+                        out.extend_from_slice(helpers::to_utf16(c, &mut buf));
+                    }
                     Ok(())
                 }
             }
