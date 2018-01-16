@@ -67,9 +67,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
             "\\n" => out.push(b'\n'),
             "\\r" => out.push(b'\r'),
             "\\\\" => out.push(b'\\'),
-            "\\x" => {
-                out.push(from_hex2(&mat.as_str().as_bytes()[2..]))
-            }
+            "\\x" => out.push(from_hex2(&mat.as_str().as_bytes()[2..])),
             "\\u" => {
                 // it will handle \u even though the roundtrip will be invalid.
                 let hex6 = &mat.as_str().as_bytes()[2..];
@@ -78,7 +76,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                 out.push(from_hex2(&hex6[0..2]));
                 out.push(from_hex2(&hex6[2..4]));
                 out.push(from_hex2(&hex6[4..]));
-            },
+            }
             _ => unreachable!("disallowed by regex"),
         }
         last_end = mat.end();
@@ -96,8 +94,11 @@ impl Error for DecodeError {
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Failed decoding, found invalid byte at index={}",
-               self.index)
+        write!(
+            f,
+            "Failed decoding, found invalid byte at index={}",
+            self.index
+        )
     }
 }
 
@@ -124,15 +125,17 @@ mod tests {
         assert_round(b"\n");
         assert_round(b"foo\n");
         assert_round(b"\tfoo\n\tbar\n");
-        assert_round(b"\x0c\x22\xFE");  // note, some of the escaped are valid ascii
-        assert_round(b"\x0c\x22\xFE");  // note, some of the escaped are valid ascii
+        assert_round(b"\x0c\x22\xFE"); // note, some of the escaped are valid ascii
+        assert_round(b"\x0c\x22\xFE"); // note, some of the escaped are valid ascii
         assert_round_str("foo bar");
         assert_round_str("¡ ¢ £ ¤ ¥ ¦ § ¨ © ª « ¬ ­");
         assert_round_str(" ʰ ʱ ʲ ʳ ʴ ʵ ʶ ʷ ʸ ʹ ʺ ʻ");
         assert_round_str("܀ ܁ ܂ ܃ ܄ ܅ ܆ ܇ ܈ ܉ ܊ ܋ ܌ ܍ ܏");
         assert_round_str("Ꭰ Ꭱ Ꭲ Ꭳ Ꭴ Ꭵ Ꭶ Ꭷ Ꭸ Ꭹ");
         assert_round_str("ἀ ἁ ἂ ἃ ἄ ἅ ἆ ἇ Ἀ Ἁ");
-        assert_round_str("                          ​ ‌ ‍ ‎ ‏ ‐ ");
+        assert_round_str(
+            "                          ​ ‌ ‍ ‎ ‏ ‐ ",
+        );
         assert_round_str("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");;
         assert_round_str("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
     }

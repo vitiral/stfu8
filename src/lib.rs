@@ -28,7 +28,7 @@ mod decode;
 mod encode_u8;
 // mod encode_u32;
 
-pub use decode::{decode_u8, DecodeError};
+pub use decode::{DecodeError, decode_u8};
 
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
@@ -84,11 +84,10 @@ pub fn encode_u8_pretty(v: &[u8]) -> String {
 ///
 /// TODO: make this public eventually
 pub(crate) struct Encoder {
-    pub(crate) encode_tab: bool,          // \t \x09
-    pub(crate) encode_line_feed: bool,    // \n \x0A
-    pub(crate) encode_cariage: bool,      // \r \x0D
+    pub(crate) encode_tab: bool,       // \t \x09
+    pub(crate) encode_line_feed: bool, // \n \x0A
+    pub(crate) encode_cariage: bool,   // \r \x0D
 }
-
 
 impl Encoder {
     /// Create a new "non pretty" `Encoder`.

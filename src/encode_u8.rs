@@ -173,8 +173,6 @@ const CONT_MASK: u8 = 0b0011_1111;
 /// Value of the tag bits (tag mask is !CONT_MASK) of a continuation byte.
 const TAG_CONT_U8: u8 = 0b1000_0000;
 
-
-
 #[test]
 fn sanity_encode() {
     fn enc(s: &str) -> String {
@@ -216,7 +214,10 @@ fn sanity_encode_binary() {
     bytes.extend_from_slice(b"\t\n\r"); // "\x09\x0a\x0d"
     bytes.extend_from_slice(b"\x07\x7f\xFE");
     bytes.extend_from_slice("¤ ¥ ¦".as_bytes());
-    assert_eq!(encode(&super::Encoder::new(), &bytes), r"¡ ¢ £\t\n\r\x07\x7F\xFE¤ ¥ ¦");
+    assert_eq!(
+        encode(&super::Encoder::new(), &bytes),
+        r"¡ ¢ £\t\n\r\x07\x7F\xFE¤ ¥ ¦"
+    );
 }
 
 #[test]
