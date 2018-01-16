@@ -11,7 +11,7 @@
 //!
 //! It permits binary data in UTF-8 by escaping them with `\`, for instance `\n` and `\x0F`.
 //!
-//! See the documentation for [`encode`](fn.encode.html) and [`decode`](fn.encode.html)
+//! See the documentation for [`encode_u8`](fn.encode_u8.html) and [`decode_u8`](fn.decode_u8.html)
 //! for how to use the library.
 //!
 //! Also consider [starring the project on github](https://github.com/vitiral/stfu8)
@@ -25,29 +25,30 @@ extern crate pretty_assertions;
 
 mod helpers;
 mod decode;
-mod encode;
+mod encode_u8;
+// mod encode_u32;
 
-pub use decode::{decode, DecodeError};
+pub use decode::{decode_u8, DecodeError};
 
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
-/// > Also check out [`encode_pretty`](fn.encode_pretty.html)
+/// > Also check out [`encode_u8_pretty`](fn.encode_u8_pretty.html)
 ///
 /// # Examples
 /// ```rust
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// let encoded = stfu8::encode(b"foo\xFF\nbar");
+/// let encoded = stfu8::encode_u8(b"foo\xFF\nbar");
 /// assert_eq!(
 ///     encoded,
 ///     r"foo\xFF\nbar" // notice the `r` == raw string
 /// );
 /// # }
 /// ```
-pub fn encode(v: &[u8]) -> String {
+pub fn encode_u8(v: &[u8]) -> String {
     let encoder = Encoder::new();
-    encode::encode(&encoder, v)
+    encode_u8::encode(&encoder, v)
 }
 
 /// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
@@ -58,23 +59,23 @@ pub fn encode(v: &[u8]) -> String {
 /// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
 /// other non-printable characters.
 ///
-/// > Also check out [`encode`](fn.encode.html)
+/// > Also check out [`encode_u8`](fn.encode_u8.html)
 ///
 /// # Examples
 /// ```rust
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// let encoded = stfu8::encode_pretty(b"foo\xFF\nbar");
+/// let encoded = stfu8::encode_u8_pretty(b"foo\xFF\nbar");
 /// assert_eq!(
 ///     encoded,
 ///     "foo\\xFF\nbar"
 /// );
 /// # }
 /// ```
-pub fn encode_pretty(v: &[u8]) -> String {
+pub fn encode_u8_pretty(v: &[u8]) -> String {
     let encoder = Encoder::pretty();
-    encode::encode(&encoder, v)
+    encode_u8::encode(&encoder, v)
 }
 
 // NOT YET STABILIZED

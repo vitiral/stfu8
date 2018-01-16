@@ -49,7 +49,8 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
                 },
                 b'\\' => out.extend_from_slice(b"\\\\"),
                 0x20...0x7e => out.push(b), // visible ASCII
-                _ => write!(out, r"\x{:0>2X}", b).unwrap(),
+                0x00...0x1F | 0x7f...0xFF => write!(out, r"\x{:0>2X}", b).unwrap(),
+                _ => unreachable!(),
             }
         }}}
 
@@ -71,16 +72,6 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
                 out.push(v[i]);
             }
         }}}
-
-        // original:
-        // macro_rules! err {
-        //     ($error_len: expr) => {
-        //         return Err(Utf8Error {
-        //             valid_up_to: old_offset,
-        //             error_len: $error_len,
-        //         })
-        //     }
-        // }
 
         macro_rules! next { () => {{
             index += 1;
@@ -181,6 +172,8 @@ static UTF8_CHAR_WIDTH: [u8; 256] = [
 const CONT_MASK: u8 = 0b0011_1111;
 /// Value of the tag bits (tag mask is !CONT_MASK) of a continuation byte.
 const TAG_CONT_U8: u8 = 0b1000_0000;
+
+
 
 #[test]
 fn sanity_encode() {

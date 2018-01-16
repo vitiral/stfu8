@@ -18,4 +18,3 @@ pub(crate) fn from_hex2(hex2: &[u8]) -> u8 {
 fn from_hex(b: u8) -> u8 {
     (b as char).to_digit(16).unwrap() as u8
 }
-

@@ -38,18 +38,18 @@ pub struct DecodeError {
 ///
 /// # fn main() {
 /// let expected = b"foo\xFF\nbar";
-/// let encoded = stfu8::encode_pretty(expected);
+/// let encoded = stfu8::encode_u8_pretty(expected);
 /// assert_eq!(
 ///     encoded,
 ///     "foo\\xFF\nbar"
 /// );
 /// assert_eq!(
 ///     expected,
-///     stfu8::decode(&encoded).unwrap().as_slice()
+///     stfu8::decode_u8(&encoded).unwrap().as_slice()
 /// );
 /// # }
 /// ```
-pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
+pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
     // keep track of the last index observed
     let mut last_end = 0;
     let mut out = Vec::new();
@@ -104,12 +104,12 @@ impl fmt::Display for DecodeError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::encode;
+    use super::super::encode_u8;
 
     fn assert_round(expected: &[u8]) {
         assert_eq!(
             expected,
-            decode(&encode(expected)).unwrap().as_slice()
+            decode_u8(&encode_u8(expected)).unwrap().as_slice()
         );
     }
 
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn sanity_code_point() {
         assert_eq!(
-            decode(r"foo\u00f372").unwrap(),
+            decode_u8(r"foo\u00f372").unwrap(),
             /*  */ b"foo\x00\x00\xf3\x72"
         );
     }

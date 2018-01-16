@@ -7,18 +7,18 @@ extern crate stfu8;
 use std::str;
 
 fn assert_round(v: &[u8]) {
-    let encoded = stfu8::encode(v);
+    let encoded = stfu8::encode_u8(v);
     // validation, we may use from_utf8_unchecked in the future
     let _ = str::from_utf8(&encoded.as_bytes()).unwrap();
-    let result = stfu8::decode(&encoded).unwrap();
+    let result = stfu8::decode_u8(&encoded).unwrap();
     assert_eq!(v, result.as_slice());
 }
 
 fn assert_round_pretty(v: &[u8]) {
-    let encoded = stfu8::encode_pretty(v);
+    let encoded = stfu8::encode_u8_pretty(v);
     // validation, we may use from_utf8_unchecked in the future
     let _ = str::from_utf8(&encoded.as_bytes()).unwrap();
-    let result = stfu8::decode(&encoded).unwrap();
+    let result = stfu8::decode_u8(&encoded).unwrap();
     assert_eq!(v, result.as_slice());
 }
 
