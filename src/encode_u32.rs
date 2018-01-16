@@ -23,7 +23,6 @@ const LEAD_MIN: u16 = 0xD800;
 const LEAD_MAX: u16 = 0xDBFF;
 const TRAIL_MIN: u16 = 0xDC00;
 const TRAIL_MAX: u16 = 0xDFFF;
-const FSLASH: u16 = b'\\' as u16;
 
 /// Encode u16 (i.e. almost UTF-16) into STFU-8.
 pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
@@ -42,9 +41,9 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
 
     loop {
         match c16 {
-            FSLASH...FSLASH => helpers::escape_u8(&mut out, encoder, c16 as u8),
             // non-printable ascii
             0x00...0x1F => helpers::escape_u8(&mut out, encoder, c16 as u8),
+            helpers::BSLASH_U16 => helpers::escape_u8(&mut out, encoder, c16 as u8),
             // leading surrogates
             LEAD_MIN...LEAD_MAX => {
                 let trail = match iter.next() {
@@ -71,7 +70,11 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
                 // trail without a lead
                 helpers::escape_u16(&mut out, c16);
             }
-            _ => out.push(char::from_u32(c16 as u32).unwrap()),
+            _ => {
+                out.push(
+                    char::from_u32(helpers::to_utf32(&[c16])).unwrap()
+                );
+            }
         }
         c16 = match iter.next() {
             Some(c) => *c,

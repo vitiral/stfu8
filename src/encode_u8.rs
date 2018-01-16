@@ -10,6 +10,9 @@
 //! `run_utf8_validation` function, used by `str::from_utf8`.
 
 use std::io::Write;
+use std::str;
+
+use helpers;
 
 /*
 Section: UTF-8 validation
@@ -19,7 +22,7 @@ Section: UTF-8 validation
 pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
     let mut index = 0;
     let len = v.len();
-    let mut out: Vec<u8> = Vec::with_capacity(len + len / 8);
+    let mut out = String::with_capacity(len + len / 8);
 
     while index < len {
         let old_offset = index;
@@ -32,24 +35,9 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
         macro_rules! maybe_ascii { ($i: expr) => {{
             let b = v[$i];
             match b {
-                b'\t' => if encoder.encode_tab {
-                    out.extend_from_slice(b"\\t");
-                } else {
-                    out.push(b);
-                },
-                b'\n' => if encoder.encode_line_feed {
-                    out.extend_from_slice(b"\\n");
-                } else {
-                    out.push(b);
-                },
-                b'\r' => if encoder.encode_cariage {
-                    out.extend_from_slice(b"\\r");
-                } else {
-                    out.push(b);
-                },
-                b'\\' => out.extend_from_slice(b"\\\\"),
-                0x20...0x7e => out.push(b), // visible ASCII
-                0x00...0x1F | 0x7f...0xFF => write!(out, r"\x{:0>2X}", b).unwrap(),
+                helpers::BSLASH => helpers::escape_u8(&mut out, encoder, b),
+                0x20...0x7e => out.push(b as char), // visible ASCII
+                0x00...0x1F | 0x7f...0xFF => helpers::escape_u8(&mut out, encoder, b),
                 _ => unreachable!(),
             }
         }}}
@@ -68,9 +56,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
         /// write everything from old_offset to current-index -- it
         /// is all valid utf8 and stfu8.
         macro_rules! write_them { () => {{
-            for i in old_offset..(index+1) {
-                out.push(v[i]);
-            }
+            out.push_str(&str::from_utf8(&v[old_offset..(index+1)]).unwrap());
         }}}
 
         macro_rules! next { () => {{
@@ -145,7 +131,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
             index += 1;
         }
     }
-    String::from_utf8(out).expect("FIXME: this can be unchecked")
+    out
 }
 
 // https://tools.ietf.org/html/rfc3629

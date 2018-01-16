@@ -10,6 +10,10 @@ use std::u16;
 use std::u32;
 use std::fmt::Write;
 
+/// the only visible character we escape
+pub(crate) const BSLASH: u8 = b'\\';
+pub(crate) const BSLASH_U16: u16 = BSLASH as u16;
+
 /// create `u8` from two bytes of hex
 pub(crate) fn from_hex2(hex2: &[u8]) -> u8 {
     debug_assert_eq!(2, hex2.len());
