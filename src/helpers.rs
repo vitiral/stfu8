@@ -8,6 +8,7 @@
 
 use std::u16;
 use std::u32;
+use std::fmt::Write;
 
 /// create `u8` from two bytes of hex
 pub(crate) fn from_hex2(hex2: &[u8]) -> u8 {
@@ -58,6 +59,42 @@ pub(crate) fn to_utf16(c: char, dst: &mut [u16]) -> &mut [u16] {
         dst[1] = trail;
         &mut dst[..2]
     }
+}
+
+pub(crate) fn utf8_to_utf16(s: &str) -> Vec<u16> {
+    let mut utf16: Vec<u16> = Vec::new();
+    for c in s.chars() {
+        let mut buf = [0_u16; 2];
+        let c16 = to_utf16(c, &mut buf);
+        utf16.extend_from_slice(&c16);
+    }
+    utf16
+}
+
+pub(crate) fn escape_u8(dst: &mut String, encoder: &super::Encoder, b: u8) {
+    match b {
+        b'\\' => dst.push_str(r"\\"),
+        b'\t' => if encoder.encode_tab {
+            dst.push_str("\\t");
+        } else {
+            dst.push(b as char);
+        },
+        b'\n' => if encoder.encode_line_feed {
+            dst.push_str("\\n");
+        } else {
+            dst.push(b as char);
+        },
+        b'\r' => if encoder.encode_cariage {
+            dst.push_str("\\r");
+        } else {
+            dst.push(b as char);
+        },
+        _ => write!(dst, r"\x{:0>2X}", b).unwrap(),
+    }
+}
+
+pub(crate) fn escape_u16(dst: &mut String, c16: u16) {
+    write!(dst, r"\u{:0>6X}", c16).unwrap();
 }
 
 #[cfg(test)]

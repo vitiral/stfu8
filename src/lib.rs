@@ -26,7 +26,7 @@ extern crate pretty_assertions;
 mod helpers;
 mod decode;
 mod encode_u8;
-// mod encode_u32;
+mod encode_u32;
 
 pub use decode::{DecodeError, decode_u8};
 
