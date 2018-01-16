@@ -26,8 +26,63 @@ lazy_static! {
 }
 
 #[derive(Debug)]
+pub enum DecodeErrorKind {
+    UnescapedSlash,
+    InvalidValue,
+}
+
+#[derive(Debug)]
 pub struct DecodeError {
+    pub kind: DecodeErrorKind,
     pub index: usize,
+}
+
+
+/// Decode generically
+pub fn decode_generic<F>(push_u32: F, s: &str) -> Result<(), DecodeError>
+    where F: Fn(u32) -> Result<(), DecodeError>
+{
+    // keep track of the last index observed
+    let mut last_end = 0;
+    let extend = |last_end, start| {
+        for c in s[last_end..start].chars() {
+            push_u32(c as u32)?
+        }
+        Ok(())
+    };
+    for mat in ESCAPED_RE.find_iter(s) {
+        let start = mat.start();
+        // push bytes that didn't need to be escaped
+        extend(last_end, start)?;
+        if mat.as_str() == "\\" {
+            return Err(DecodeError {
+                index: start,
+                kind: DecodeErrorKind::InvalidValue,
+            })
+        }
+
+        match &mat.as_str()[..2] {
+            "\\t" => push_u32(b'\t' as u32)?,
+            "\\n" => push_u32(b'\n' as u32)?,
+            "\\r" => push_u32(b'\r' as u32)?,
+            "\\\\" => push_u32(b'\\' as u32)?,
+            "\\x" => push_u32(from_hex2(&mat.as_str().as_bytes()[2..]) as u32)?,
+            "\\u" => {
+                // it will handle \u even though the roundtrip will be invalid.
+                let hex6 = &mat.as_str().as_bytes()[2..];
+                debug_assert_eq!(6, hex6.len());
+                let d0 = from_hex2(&hex6[0..2]) as u32;
+                let d1 = from_hex2(&hex6[2..4]) as u32;
+                let d2 = from_hex2(&hex6[4..]) as u32;
+
+                push_u32((d0 << 16) + (d1 << 8) + d2);
+            }
+            _ => unreachable!("disallowed by regex"),
+        }
+        last_end = mat.end();
+    }
+    extend(last_end, s.len());
+    Ok(())
 }
 
 /// Decode a UTF-8 string containing encoded STFU-8 into binary.
@@ -59,7 +114,10 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
         // push bytes that didn't need to be escaped
         out.extend_from_slice(&v[last_end..start]);
         if mat.as_str() == "\\" {
-            return Err(DecodeError { index: start });
+            return Err(DecodeError {
+                index: start,
+                kind: DecodeErrorKind::InvalidValue,
+            })
         }
 
         match &mat.as_str()[..2] {
@@ -72,10 +130,16 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                 // it will handle \u even though the roundtrip will be invalid.
                 let hex6 = &mat.as_str().as_bytes()[2..];
                 debug_assert_eq!(6, hex6.len());
-                out.push(0); // \u is used to specify a u32 character
-                out.push(from_hex2(&hex6[0..2]));
-                out.push(from_hex2(&hex6[2..4]));
-                out.push(from_hex2(&hex6[4..]));
+                let d0 = from_hex2(&hex6[0..2]);
+                let d1 = from_hex2(&hex6[2..4]);
+                let d3 = from_hex2(&hex6[4..]);
+                if d0 > 0 || d1 > 0 {
+                    return Err(DecodeError {
+                        index: start,
+                        kind: DecodeErrorKind::InvalidValue,
+                    });
+                }
+                out.push(d3);
             }
             _ => unreachable!("disallowed by regex"),
         }
@@ -88,17 +152,16 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
 
 impl Error for DecodeError {
     fn description(&self) -> &str {
-        "failure decoding as STFU8"
+        match self.kind {
+            DecodeErrorKind::UnescapedSlash => r#"Found unmatched '\'. Use "\\" to escape slashes"#,
+            DecodeErrorKind::InvalidValue => r#"Escaped value is out of range of the decoder"#,
+        }
     }
 }
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Failed decoding, found invalid byte at index={}",
-            self.index
-        )
+        write!(f, "{}: {}", self.description(), self.index,)
     }
 }
 
@@ -143,8 +206,8 @@ mod tests {
     #[test]
     fn sanity_code_point() {
         assert_eq!(
-            decode_u8(r"foo\u00f372").unwrap(),
-            /*  */ b"foo\x00\x00\xf3\x72"
+            decode_u8(r"foo\u000072").unwrap(),
+            /*     */ b"foo\x72"
         );
     }
 }

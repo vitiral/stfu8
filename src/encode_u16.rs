@@ -64,9 +64,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
                 helpers::escape_u16(&mut out, c16);
             }
             _ => {
-                out.push(
-                    char::from_u32(helpers::to_utf32(&[c16])).unwrap()
-                );
+                out.push(char::from_u32(helpers::to_utf32(&[c16])).unwrap());
             }
         }
         c16 = match iter.next() {
