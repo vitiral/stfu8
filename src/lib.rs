@@ -11,8 +11,9 @@
 //!
 //! It permits binary data in UTF-8 by escaping them with `\`, for instance `\n` and `\x0F`.
 //!
-//! See the documentation for [`encode_u8`](fn.encode_u8.html) and [`decode_u8`](fn.decode_u8.html)
-//! for how to use the library.
+//! See the documentation for:
+//! - [`encode_u8`](fn.encode_u8.html) and [`decode_u8`](fn.decode_u8.html)
+//! - [`encode_u16`](fn.encode_u16.html) and [`decode_u16`](fn.decode_u16.html)
 //!
 //! Also consider [starring the project on github](https://github.com/vitiral/stfu8)
 #[macro_use]
@@ -26,7 +27,7 @@ extern crate pretty_assertions;
 mod helpers;
 mod decode;
 mod encode_u8;
-mod encode_u32;
+mod encode_u16;
 
 pub use decode::{DecodeError, decode_u8};
 
@@ -78,6 +79,67 @@ pub fn encode_u8_pretty(v: &[u8]) -> String {
     encode_u8::encode(&encoder, v)
 }
 
+/// Encode text as STFU-8, escaping all non-printable characters.
+///
+/// > Also check out [`encode_u16_pretty`](fn.encode_u16_pretty.html)
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
+///     .iter()
+///     .map(|b| *b as u16)
+///     .collect();
+///
+/// // Make it ill formed UTF-16
+/// ill.push(0xD800);       // surrogate pair lead
+/// ill.push(b' ' as u16);  // NOT a trail
+/// ill.push(0xDEED);       // Trail... with no lead
+/// ill.push(b' ' as u16);
+/// ill.push(0xDABA);       // lead... but end of str
+/// let encoded = stfu8::encode_u16(ill.as_slice());
+///
+/// // Note that 0xFF is the valid character "ÿ"
+/// // and the ill-formed characters are escaped.
+/// assert_eq!(
+///     encoded,
+///     r"fooÿ\nbar\u00D800 \u00DEED \u00DABA"
+/// );
+/// # }
+/// ```
+pub fn encode_u16(v: &[u16]) -> String {
+    let encoder = Encoder::new();
+    encode_u16::encode(&encoder, v)
+}
+
+/// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
+/// - `\t`: tab
+/// - `\n`: line feed
+/// - `\r`: cariage return
+///
+/// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
+/// other non-printable characters.
+///
+/// > Also check out [`encode_u16`](fn.encode_u16.html)
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// // let encoded = stfu8::encode_u16_pretty(b"foo\xFF\nbar");
+/// // assert_eq!(
+/// //     encoded,
+/// //     "foo\\xFF\nbar"
+/// // );
+/// # }
+/// ```
+pub fn encode_u16_pretty(v: &[u16]) -> String {
+    let encoder = Encoder::pretty();
+    encode_u16::encode(&encoder, v)
+}
 // NOT YET STABILIZED
 
 /// Settings for encoding binary data.

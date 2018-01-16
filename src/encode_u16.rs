@@ -11,7 +11,6 @@
 
 use std::u16;
 use std::char;
-use std::io::Write;
 
 use helpers;
 
@@ -26,12 +25,7 @@ const TRAIL_MAX: u16 = 0xDFFF;
 
 /// Encode u16 (i.e. almost UTF-16) into STFU-8.
 pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
-    // This is really quite trivial. We only need to treat *unpaied surrogates*
-    // as special, otherwise we just convert everything to a char and
-    // push it to the output.
-    let mut index = 0;
-    let len = v.len();
-    let mut out = String::with_capacity(len * 2);
+    let mut out = String::with_capacity(v.len() * 2);
 
     let mut iter = v.iter();
     let mut c16 = match iter.next() {
@@ -42,8 +36,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
     loop {
         match c16 {
             // non-printable ascii
-            0x00...0x1F => helpers::escape_u8(&mut out, encoder, c16 as u8),
-            helpers::BSLASH_U16 => helpers::escape_u8(&mut out, encoder, c16 as u8),
+            0x00...0x1F | helpers::BSLASH_U16 => helpers::escape_u8(&mut out, encoder, c16 as u8),
             // leading surrogates
             LEAD_MIN...LEAD_MAX => {
                 let trail = match iter.next() {

@@ -9,7 +9,6 @@
 //! This code is practically copy/pasted from the rust std libraries'
 //! `run_utf8_validation` function, used by `str::from_utf8`.
 
-use std::io::Write;
 use std::str;
 
 use helpers;
