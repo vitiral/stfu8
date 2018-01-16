@@ -24,12 +24,14 @@ extern crate regex;
 #[macro_use]
 extern crate pretty_assertions;
 
+use std::u8;
+
 mod helpers;
 mod decode;
 mod encode_u8;
 mod encode_u16;
 
-pub use decode::{DecodeError, decode_u8};
+pub use decode::{DecodeError, DecodeErrorKind};
 
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
@@ -140,6 +142,54 @@ pub fn encode_u16_pretty(v: &[u16]) -> String {
     let encoder = Encoder::pretty();
     encode_u16::encode(&encoder, v)
 }
+
+/// Decode a UTF-8 string containing encoded STFU-8 into binary.
+///
+/// # Examples
+/// ```rust
+/// # extern crate stfu8;
+///
+/// # fn main() {
+/// let expected = b"foo\xFF\nbar";
+/// let encoded = stfu8::encode_u8_pretty(expected);
+/// assert_eq!(
+///     encoded,
+///     "foo\\xFF\nbar"
+/// );
+/// assert_eq!(
+///     expected,
+///     stfu8::decode_u8(&encoded).unwrap().as_slice()
+/// );
+/// # }
+/// ```
+pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
+    let mut out: Vec<u8> = Vec::new();
+    {
+        let f = |val: decode::PushGeneric| -> Result<(), DecodeError> {
+            match val {
+                decode::PushGeneric::Value{val, start} => {
+                    if val > u8::MAX as u32 {
+                        Err(DecodeError {
+                            index: start,
+                            kind: DecodeErrorKind::InvalidValue,
+                        })
+                    } else {
+                        out.push(val as u8);
+                        Ok(())
+                    }
+                },
+                decode::PushGeneric::String(s) => {
+                    out.extend_from_slice(&s.as_bytes());
+                    Ok(())
+                }
+            }
+        };
+        decode::decode_generic(f, s)?;
+    }
+    Ok(out)
+}
+
+
 // NOT YET STABILIZED
 
 /// Settings for encoding binary data.
