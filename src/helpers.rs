@@ -46,31 +46,11 @@ pub(crate) fn to_utf32(v: &[u16]) -> u32 {
     }
 }
 
-/// Convert from char to UTF-16.
-///
-/// Note: we require the `char` to be valid unicode, not arbitrary `u32`.
-///
-/// From: http://unicode.org/faq/utf_bom.html
-pub(crate) fn to_utf16(c: char, dst: &mut [u16]) -> &mut [u16] {
-    let c = c as i64;
-    if c <= u16::MAX as i64 {
-        dst[0] = c as u16;
-        &mut dst[..1]
-    } else {
-        let lead: u16 = (LEAD_OFFSET + (c >> 10)) as u16;
-        let trail: u16 = (0xDC00 + (c & 0x3FF)) as u16;
-        dst[0] = lead;
-        dst[1] = trail;
-        &mut dst[..2]
-    }
-}
-
-#[cfg(test)]
-pub(crate) fn utf8_to_utf16(s: &str) -> Vec<u16> {
+pub fn utf8_to_utf16(s: &str) -> Vec<u16> {
     let mut utf16: Vec<u16> = Vec::new();
     for c in s.chars() {
         let mut buf = [0_u16; 2];
-        let c16 = to_utf16(c, &mut buf);
+        let c16 = c.encode_utf16(&mut buf);
         utf16.extend_from_slice(&c16);
     }
     utf16
@@ -112,7 +92,7 @@ mod tests {
             let mut expected = [0_u16; 2];
             let mut c16 = [0_u16; 2];
             let expected = c.encode_utf16(&mut expected);
-            let c16 = to_utf16(c, &mut c16);
+            let c16 = c.encode_utf16(&mut c16);
             if expected.len() == 2 {
                 got_suplimental = true
             }

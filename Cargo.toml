@@ -28,3 +28,7 @@ pretty_assertions = "0.4.1"
 proptest = "0.3.4"
 rand = "0.4.2"
 regex_generate = "0.2.0"
+
+[features]
+default = ["testing"]
+testing = []

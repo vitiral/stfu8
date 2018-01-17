@@ -34,6 +34,9 @@ mod encode_u16;
 
 pub use decode::{DecodeError, DecodeErrorKind};
 
+#[cfg(feature="testing")]
+pub use helpers::utf8_to_utf16;
+
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
 /// > Also check out [`encode_u8_pretty`](fn.encode_u8_pretty.html)
@@ -253,7 +256,7 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
                 decode::PushGeneric::String(s) => {
                     for c in s.chars() {
                         let mut buf = [0u16; 2];
-                        out.extend_from_slice(helpers::to_utf16(c, &mut buf));
+                        out.extend_from_slice(c.encode_utf16(&mut buf));
                     }
                     Ok(())
                 }
