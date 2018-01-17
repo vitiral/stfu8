@@ -26,17 +26,17 @@ fn from_hex(b: u8) -> u8 {
     (b as char).to_digit(16).unwrap() as u8
 }
 
-const LEAD_OFFSET: i64 = 0xD800 - (0x10000 >> 10);
-const SURROGATE_OFFSET: i64 = (0x10000 - (0xD800 << 10) - 0xDC00);
+const LEAD_OFFSET: i64 = 0xD800 - (0x1_0000 >> 10);
+const SURROGATE_OFFSET: i64 = (0x1_0000 - (0xD800 << 10) - 0xDC00);
 
 /// Convert from UTF-16 to UTF-32.
 ///
 /// Note: the input must be pre-validated UTF-16.
 ///
-/// From: http://unicode.org/faq/utf_bom.html
+/// From: <http://unicode.org/faq/utf_bom.html/>
 pub(crate) fn to_utf32(v: &[u16]) -> u32 {
     if v.len() == 1 {
-        return v[0] as u32;
+        v[0] as u32
     } else if v.len() == 2 {
         let lead = v[0] as i64;
         let trail = v[1] as i64;

@@ -6,16 +6,24 @@
  * copied, modified, or distributed except according to those terms.
  */
 //! # STFU-8: Sorta Text Format in UTF-8
-//! Basically STFU-8 is the text format you already write when use escape codes in C, python, rust,
-//! etc.
+//! STFU-8 is a hacky text encoding/decoding protocol for data that might be *not quite* UTF-8 but
+//! is still mostly UTF-8. It is based on the syntax of the `repr` created when you write (or
+//! print) binary text in python, C or other common programming languages.
 //!
-//! It permits binary data in UTF-8 by escaping them with `\`, for instance `\n` and `\x0F`.
+//! Its primary purpose is to be able to **visualize and edit** "data" that is mostly (or fully)
+//! **visible** UTF-8 text. It encodes all non visible or non UTF-8 compliant bytes as longform
+//! text (i.e. ESC which is `\x1B`).  It can also encode/decode ill-formed UTF-16 using the
+//! `encode_u16` and `decode_u16` functions.
+//!
+//! Basically STFU-8 is the text format you already write when use escape codes in C, python, rust,
+//! etc. It permits binary data in UTF-8 by escaping them with `\`, for instance `\n` and `\x0F`.
 //!
 //! See the documentation for:
+//!
 //! - [`encode_u8`](fn.encode_u8.html) and [`decode_u8`](fn.decode_u8.html)
 //! - [`encode_u16`](fn.encode_u16.html) and [`decode_u16`](fn.decode_u16.html)
 //!
-//! Also consider [starring the project on github](https://github.com/vitiral/stfu8)
+//! Also see the [project README](https://github.com/vitiral/stfu8) and consider starring it!
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
@@ -36,7 +44,8 @@ pub use decode::{DecodeError, DecodeErrorKind};
 
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
-/// > Also check out [`encode_u8_pretty`](fn.encode_u8_pretty.html)
+/// - [`encode_u8_pretty`](fn.encode_u8_pretty.html)
+/// - [`decode_u8`](fn.decode_u8.html)
 ///
 /// # Examples
 /// ```rust
@@ -56,6 +65,7 @@ pub fn encode_u8(v: &[u8]) -> String {
 }
 
 /// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
+///
 /// - `\t`: tab
 /// - `\n`: line feed
 /// - `\r`: cariage return
@@ -63,7 +73,10 @@ pub fn encode_u8(v: &[u8]) -> String {
 /// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
 /// other non-printable characters.
 ///
-/// > Also check out [`encode_u8`](fn.encode_u8.html)
+/// Also check out:
+///
+/// - [`encode_u8`](fn.encode_u8.html)
+/// - [`decode_u8`](fn.decode_u8.html)
 ///
 /// # Examples
 /// ```rust
@@ -84,7 +97,10 @@ pub fn encode_u8_pretty(v: &[u8]) -> String {
 
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
-/// > Also check out [`encode_u16_pretty`](fn.encode_u16_pretty.html)
+/// Also check out:
+///
+/// - [`encode_u16_pretty`](fn.encode_u16_pretty.html)
+/// - [`decode_u16`](fn.decode_u16.html)
 ///
 /// # Examples
 /// ```rust
@@ -117,6 +133,7 @@ pub fn encode_u16(v: &[u16]) -> String {
 }
 
 /// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
+///
 /// - `\t`: tab
 /// - `\n`: line feed
 /// - `\r`: cariage return
@@ -124,7 +141,10 @@ pub fn encode_u16(v: &[u16]) -> String {
 /// This will allow the encoded text to print "pretilly" while still escaping invalid unicode and
 /// other non-printable characters.
 ///
-/// > Also check out [`encode_u16`](fn.encode_u16.html)
+/// Also check out:
+///
+/// - [`encode_u16`](fn.encode_u16.html)
+/// - [`decode_u16`](fn.decode_u16.html)
 ///
 /// # Examples
 /// ```rust
@@ -157,6 +177,11 @@ pub fn encode_u16_pretty(v: &[u16]) -> String {
 }
 
 /// Decode a UTF-8 string containing encoded STFU-8 into binary.
+///
+/// Can decode the output of these functions:
+///
+/// - [`encode_u8`](fn.encode_u8.html)
+/// - [`encode_u8_pretty`](fn.encode_u8_pretty.html)
 ///
 /// # Examples
 /// ```rust
@@ -203,6 +228,11 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
 }
 
 /// Decode a UTF-8 string containing encoded STFU-8 into a `Vec<u16>`.
+///
+/// Can decode the output of these functions:
+///
+/// - [`encode_u16`](fn.encode_u16.html)
+/// - [`encode_u16_pretty`](fn.encode_u16_pretty.html)
 ///
 /// # Examples
 /// ```rust
@@ -287,7 +317,8 @@ impl Encoder {
 
     /// Create a "pretty" `Encoder`.
     ///
-    /// The following non-printable characters will not be escaped:
+    /// The following non-printable characters will NOT be escaped:
+    ///
     /// - `\t`: tab
     /// - `\n`: line feed
     /// - `\r`: cariage return

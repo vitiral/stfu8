@@ -41,7 +41,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
             }
         }}}
 
-        /// Escape everything from old_offset to current index.
+        /// Escape everything from `old_offset` to current index.
         /// It is invalid STFU-8 (which might be invalid utf8,
         /// or could just be the `\` character...)
         macro_rules! escape_them { () => {{
@@ -52,7 +52,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
             continue;
         }}}
 
-        /// write everything from old_offset to current-index -- it
+        /// write everything from `old_offset` to current-index -- it
         /// is all valid utf8 and stfu8.
         macro_rules! write_them { () => {{
             out.push_str(&str::from_utf8(&v[old_offset..(index+1)]).unwrap());
@@ -155,7 +155,7 @@ static UTF8_CHAR_WIDTH: [u8; 256] = [
 
 /// Mask of the value bits of a continuation byte.
 const CONT_MASK: u8 = 0b0011_1111;
-/// Value of the tag bits (tag mask is !CONT_MASK) of a continuation byte.
+/// Value of the tag bits (tag mask is !`CONT_MASK`) of a continuation byte.
 const TAG_CONT_U8: u8 = 0b1000_0000;
 
 #[test]
