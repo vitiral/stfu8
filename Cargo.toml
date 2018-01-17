@@ -5,10 +5,11 @@ authors = ["Garrett Berg <googberg@gmail.com>"]
 description = "Sorta Text Format in UTF-8"
 keywords = [
     "unicode",
-    "utf8",
-    "utf-8",
+    "UTF-8",
+    "UTF-16",
     "text",
     "binary",
+    "repr",
 ]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
