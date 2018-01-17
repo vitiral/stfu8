@@ -42,7 +42,7 @@ mod encode_u16;
 
 pub use decode::{DecodeError, DecodeErrorKind};
 
-/// Encode text as STFU-8, escaping all non-printable characters.
+/// Encode text as STFU-8, escaping all non-printable or non UTF-8 bytes.
 ///
 /// - [`encode_u8_pretty`](fn.encode_u8_pretty.html)
 /// - [`decode_u8`](fn.decode_u8.html)
@@ -64,7 +64,7 @@ pub fn encode_u8(v: &[u8]) -> String {
     encode_u8::encode(&encoder, v)
 }
 
-/// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
+/// Encode text as STFU-8, escaping all non-printable or non UTF-8 bytes EXCEPT:
 ///
 /// - `\t`: tab
 /// - `\n`: line feed
@@ -95,7 +95,7 @@ pub fn encode_u8_pretty(v: &[u8]) -> String {
     encode_u8::encode(&encoder, v)
 }
 
-/// Encode text as STFU-8, escaping all non-printable characters.
+/// Encode UTF-16 as STFU-8, escaping all non-printable or ill-formed UTF-16 characters.
 ///
 /// Also check out:
 ///
@@ -132,7 +132,7 @@ pub fn encode_u16(v: &[u16]) -> String {
     encode_u16::encode(&encoder, v)
 }
 
-/// Decode STFU-8 text as binary, escaping all non-printable characters EXCEPT:
+/// Encode UTF-16 as STFU-8, escaping all non-printable or ill-formed UTF-16 characters EXCEPT:
 ///
 /// - `\t`: tab
 /// - `\n`: line feed
