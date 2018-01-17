@@ -6,6 +6,7 @@
  * copied, modified, or distributed except according to those terms.
  */
 
+use std::char;
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
@@ -72,14 +73,27 @@ pub(crate) fn decode_generic<'a, F>(
             "\\\\" =>b'\\' as u32,
             "\\x" => from_hex2(&mat.as_str().as_bytes()[2..]) as u32,
             "\\u" => {
-                // it will handle \u even though the roundtrip will be invalid.
                 let hex6 = &mat.as_str().as_bytes()[2..];
                 debug_assert_eq!(6, hex6.len());
                 let d0 = from_hex2(&hex6[0..2]) as u32;
                 let d1 = from_hex2(&hex6[2..4]) as u32;
                 let d2 = from_hex2(&hex6[4..]) as u32;
 
-                (d0 << 16) + (d1 << 8) + d2
+                let c32 = (d0 << 16) + (d1 << 8) + d2;
+                match char::from_u32(c32) {
+                    Some(c) => {
+                        // It is a valid UTF code point. Always
+                        // decode it as such.
+                        let mut out = String::with_capacity(4);
+                        out.push(c);
+                        push_val(PushGeneric::String(&out))?;
+                        last_end = mat.end();
+                        continue;
+                    },
+                    // It is not a valid code point. Still try
+                    // to record it's value "as is".
+                    None => c32,
+                }
             }
             _ => unreachable!("disallowed by regex"),
         };

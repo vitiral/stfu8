@@ -4,8 +4,6 @@
 #[macro_use]
 extern crate pretty_assertions;
 extern crate proptest;
-extern crate rand;
-extern crate regex_generate;
 extern crate stfu8;
 
 use stfu8::{decode_u8, decode_u16, encode_u8, encode_u8_pretty, encode_u16, encode_u16_pretty};
@@ -104,6 +102,18 @@ fn sanity_roundtrip() {
     assert_round_str("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
 }
 
+// #[test]
+// fn sanity_u8_decode() {
+//     assert_eq!(
+//         decode_u8(r"foo\u000072").unwrap(),
+//         /*     */ b"foo\x72"
+//     );
+//
+//     assert!(decode_u8(r"foo\u200172").is_err());
+//     assert!(decode_u8(r"foo\foo").is_err());
+//     assert!(decode_u8(r"foo\").is_err());
+// }
+
 #[test]
 fn sanity_u8_decode() {
     assert_eq!(
@@ -111,7 +121,10 @@ fn sanity_u8_decode() {
         /*     */ b"foo\x72"
     );
 
-    assert!(decode_u8(r"foo\u000172").is_err());
+    assert_eq!(decode_u8(r"foo\u000156").unwrap(), "fooŖ".as_bytes());
+    assert_eq!(decode_u8(r"foo\u02070E").unwrap(), "foo𠜎".as_bytes());
+    assert!(decode_u8(r"foo\u220178").is_err());
+    assert!(decode_u8(r"foo\u00D800").is_err()); // pair lead
     assert!(decode_u8(r"foo\foo").is_err());
     assert!(decode_u8(r"foo\").is_err());
 }

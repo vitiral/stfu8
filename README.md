@@ -62,9 +62,13 @@ that single `\` items are illegal. The following patterns are legal:
 - `\r`: decodes to the linefeed byte (`\x0D`)
 - `\xXX` where XX are exactly two case-insensitive hexidecimal digits: decodes
   to the `\xXX` byte, where `XX` is a hexidecimal number (example: `\x9F`,
-  `\xaB` or `\x05`)
+  `\xaB` or `\x05`). This *never* gets resolved into a code point, the value
+  is pushed directly into the decoder stream.
 - `\uXXXXXX` where `XXXXXX` are exacty six case-insensitive hexidecimal digits,
   decodes to a 24bit number that *typically* represenents a unicode code point.
+  If the value *is* a unicode code point it will always be decoded as such.
+  Otherwise stfu will attempt to store the value into the decoder (if the value
+  is too large for the decoding type it will be an error).
 
 stfu8 provides 2 different categories of functions for encoding/decoding data:
 - `encode_u8(&[u8]) -> String` and `decode_u8(&str) -> Vec<u8>`: encodes or
