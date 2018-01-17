@@ -78,7 +78,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
 #[test]
 fn sanity_encode() {
     fn enc(s: &str) -> String {
-        let utf16 = helpers::utf8_to_utf16(s);
+        let utf16: Vec<u16> = s.encode_utf16().collect();
         println!("utf16: {:?}", utf16);
         let out = encode(&super::Encoder::new(), &utf16);
         // validation, we may use from_utf8_unchecked in the future

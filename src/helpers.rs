@@ -46,16 +46,6 @@ pub(crate) fn to_utf32(v: &[u16]) -> u32 {
     }
 }
 
-pub fn utf8_to_utf16(s: &str) -> Vec<u16> {
-    let mut utf16: Vec<u16> = Vec::new();
-    for c in s.chars() {
-        let mut buf = [0_u16; 2];
-        let c16 = c.encode_utf16(&mut buf);
-        utf16.extend_from_slice(&c16);
-    }
-    utf16
-}
-
 pub(crate) fn escape_u8(dst: &mut String, encoder: &super::Encoder, b: u8) {
     match b {
         b'\\' => dst.push_str(r"\\"),

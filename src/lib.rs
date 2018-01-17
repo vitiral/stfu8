@@ -34,9 +34,6 @@ mod encode_u16;
 
 pub use decode::{DecodeError, DecodeErrorKind};
 
-#[cfg(feature="testing")]
-pub use helpers::utf8_to_utf16;
-
 /// Encode text as STFU-8, escaping all non-printable characters.
 ///
 /// > Also check out [`encode_u8_pretty`](fn.encode_u8_pretty.html)
@@ -94,9 +91,8 @@ pub fn encode_u8_pretty(v: &[u8]) -> String {
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
-///     .iter()
-///     .map(|b| *b as u16)
+/// let mut ill: Vec<u16> = "fooÿ\nbar"
+///     .encode_utf16()
 ///     .collect();
 ///
 /// // Make it ill formed UTF-16
@@ -135,9 +131,8 @@ pub fn encode_u16(v: &[u16]) -> String {
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
-///     .iter()
-///     .map(|b| *b as u16)
+/// let mut ill: Vec<u16> = "fooÿ\nbar"
+///     .encode_utf16()
 ///     .collect();
 ///
 /// // Make it ill formed UTF-16
@@ -214,9 +209,8 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
 /// # extern crate stfu8;
 ///
 /// # fn main() {
-/// let mut ill: Vec<u16> = b"foo\xFF\nbar"
-///     .iter()
-///     .map(|b| *b as u16)
+/// let mut ill: Vec<u16> = "fooÿ\nbar"
+///     .encode_utf16()
 ///     .collect();
 ///
 /// // Make it ill formed UTF-16
