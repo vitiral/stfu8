@@ -176,6 +176,11 @@ pub fn encode_u16_pretty(v: &[u16]) -> String {
     encode_u16::encode(&encoder, v)
 }
 
+/// Just used for error messages
+fn escape_u32(c32: u32) -> String {
+    format!(r"\u{:0>6X}", c32)
+}
+
 /// Decode a UTF-8 string containing encoded STFU-8 into binary.
 ///
 /// Can decode the output of these functions:
@@ -210,6 +215,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                         Err(DecodeError {
                             index: start,
                             kind: DecodeErrorKind::InvalidValue,
+                            mat: escape_u32(val),
                         })
                     } else {
                         out.push(val as u8);
@@ -271,6 +277,7 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
                         Err(DecodeError {
                             index: start,
                             kind: DecodeErrorKind::InvalidValue,
+                            mat: escape_u32(val),
                         })
                     } else {
                         out.push(val as u16);

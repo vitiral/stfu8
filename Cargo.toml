@@ -1,6 +1,6 @@
 [package]
 name = "stfu8"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Garrett Berg <googberg@gmail.com>"]
 description = "Sorta Text Format in UTF-8"
 keywords = [

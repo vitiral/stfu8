@@ -36,6 +36,7 @@ pub enum DecodeErrorKind {
 pub struct DecodeError {
     pub kind: DecodeErrorKind,
     pub index: usize,
+    pub(crate) mat: String,
 }
 
 pub(crate) enum PushGeneric<'a> {
@@ -63,6 +64,7 @@ pub(crate) fn decode_generic<'a, F>(
             return Err(DecodeError {
                 index: start,
                 kind: DecodeErrorKind::UnescapedSlash,
+                mat: mat.as_str().to_string(),
             })
         }
 
@@ -116,6 +118,6 @@ impl Error for DecodeError {
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", self.description(), self.index,)
+        write!(f, "{} when decoding {:?} [index={}]", self.index, self.description(), self.mat)
     }
 }
