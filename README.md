@@ -22,7 +22,7 @@ Comparision to other formats:
   - The linux command line defines ANSI escape codes to provide styles like
     color, bold, italic, etc. Even though almost everything printed to a
     terminal is UTF-8 text these "escape codes" might not be, and even
-    if they are they are UTF-8, they are not visible characters.
+    if they are UTF-8, they are not visible characters.
   - Windows paths are not *necessarily* UTF-8 compliant as they can
     have [ill formed text][utf-16-ill-formed-text].
   - There might be other cases you can think of or want to create. In general,
@@ -42,7 +42,7 @@ Comparision to other formats:
   encoding to base64 will make it completely un(human)readable.
 - **Array[u8]**: obviously great if your data is *actually binary* (i.e. NOT
   TEXT) and you don't need to put it into a UTF-8 encoding.  However, an array
-  of bytes (i.e. `['0x72', '0x65', '0x61', '0x64', '0x20', '0x69', '0x74']` is
+  of bytes (i.e. `[0x72, 0x65, 0x61, 0x64, 0x20, 0x69, 0x74]` is
   not human readable. Even if it were in pure ASCII the only ones who can read
   it efficiently are low-level programming Gods who have never figured out how
   to debug-print their ASCII.
@@ -86,7 +86,7 @@ with `decode_u16`).
 
 There are some general rules for encoding and decoding:
 - If `\u...` cannot be resolved into a valid UTF code point it *must* fit into
-  the decoder. For instance, trying to decode `"\x00DEED"` (which is an UTF-16
+  the decoder. For instance, trying to decode `"\u00DEED"` (which is an UTF-16
   Trail surrogage) using `decode_u8` will fail, but will succeed with
   `decode_u16`.
 - No escaped values are *ever chained*. For example, `"\x01\x02"` will be
