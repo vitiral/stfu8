@@ -26,7 +26,7 @@ fn from_hex(b: u8) -> u8 {
     (b as char).to_digit(16).unwrap() as u8
 }
 
-const SURROGATE_OFFSET: i64 = (0x1_0000 - (0xD800 << 10) - 0xDC00);
+const SURROGATE_OFFSET: i64 = 0x1_0000 - (0xD800 << 10) - 0xDC00;
 
 /// Convert from UTF-16 to UTF-32.
 ///

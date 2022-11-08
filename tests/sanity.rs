@@ -98,7 +98,7 @@ fn sanity_roundtrip() {
     assert_round_str(
         "                          ​ ‌ ‍ ‎ ‏ ‐ ",
     );
-    assert_round_str("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");;
+    assert_round_str("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");
     assert_round_str("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
 }
 

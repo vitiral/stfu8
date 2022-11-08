@@ -24,6 +24,9 @@
 //! - [`encode_u16`](fn.encode_u16.html) and [`decode_u16`](fn.decode_u16.html)
 //!
 //! Also see the [project README](https://github.com/vitiral/stfu8) and consider starring it!
+
+#![forbid(unsafe_code)]
+
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
@@ -223,7 +226,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                     }
                 },
                 decode::PushGeneric::String(s) => {
-                    out.extend_from_slice(&s.as_bytes());
+                    out.extend_from_slice(s.as_bytes());
                     Ok(())
                 }
             }
