@@ -223,7 +223,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                     }
                 },
                 decode::PushGeneric::String(s) => {
-                    out.extend_from_slice(&s.as_bytes());
+                    out.extend_from_slice(s.as_bytes());
                     Ok(())
                 }
             }
