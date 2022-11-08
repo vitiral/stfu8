@@ -118,6 +118,6 @@ impl Error for DecodeError {
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} when decoding {:?} [index={}]", self.index, self.description(), self.mat)
+        write!(f, "{} when decoding {:?} [index={}]", self.index, self, self.mat)
     }
 }
