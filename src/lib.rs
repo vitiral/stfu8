@@ -24,6 +24,9 @@
 //! - [`encode_u16`](fn.encode_u16.html) and [`decode_u16`](fn.decode_u16.html)
 //!
 //! Also see the [project README](https://github.com/vitiral/stfu8) and consider starring it!
+
+#![forbid(unsafe_code)]
+
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
