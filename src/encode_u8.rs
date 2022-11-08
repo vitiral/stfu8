@@ -35,9 +35,8 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
             let b = v[$i];
             match b {
                 helpers::BSLASH => helpers::escape_u8(&mut out, encoder, b),
-                0x20...0x7e => out.push(b as char), // visible ASCII
-                0x00...0x1F | 0x7f...0xFF => helpers::escape_u8(&mut out, encoder, b),
-                _ => unreachable!(),
+                0x20..=0x7e => out.push(b as char), // visible ASCII
+                0x00..=0x1F | 0x7f..=0xFF => helpers::escape_u8(&mut out, encoder, b),
             }
         }}}
 
@@ -97,10 +96,10 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
                 }
                 3 => {
                     match (first, next!()) {
-                        (0xE0, 0xA0...0xBF)
-                        | (0xE1...0xEC, 0x80...0xBF)
-                        | (0xED, 0x80...0x9F)
-                        | (0xEE...0xEF, 0x80...0xBF) => {}
+                        (0xE0, 0xA0..=0xBF)
+                        | (0xE1..=0xEC, 0x80..=0xBF)
+                        | (0xED, 0x80..=0x9F)
+                        | (0xEE..=0xEF, 0x80..=0xBF) => {}
                         _ => escape_them!(), // orig: err!(Some(1))
                     }
                     if next!() & !CONT_MASK != TAG_CONT_U8 {
@@ -109,7 +108,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
                 }
                 4 => {
                     match (first, next!()) {
-                        (0xF0, 0x90...0xBF) | (0xF1...0xF3, 0x80...0xBF) | (0xF4, 0x80...0x8F) => {}
+                        (0xF0, 0x90..=0xBF) | (0xF1..=0xF3, 0x80..=0xBF) | (0xF4, 0x80..=0x8F) => {}
                         _ => escape_them!(), //orig: err!(Some(1))
                     }
                     if next!() & !CONT_MASK != TAG_CONT_U8 {

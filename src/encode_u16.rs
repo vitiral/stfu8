@@ -36,9 +36,9 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
     loop {
         match c16 {
             // non-printable ascii
-            0x00...0x1F | helpers::BSLASH_U16 => helpers::escape_u8(&mut out, encoder, c16 as u8),
+            0x00..=0x1F | helpers::BSLASH_U16 => helpers::escape_u8(&mut out, encoder, c16 as u8),
             // leading surrogates
-            LEAD_MIN...LEAD_MAX => {
+            LEAD_MIN..=LEAD_MAX => {
                 let trail = match iter.next() {
                     Some(t) => *t,
                     None => {
@@ -59,7 +59,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
                 out.push(char::from_u32(helpers::to_utf32(&buf)).unwrap());
             }
             // unpaired trailing surrogates
-            TRAIL_MIN...TRAIL_MAX => {
+            TRAIL_MIN..=TRAIL_MAX => {
                 // trail without a lead
                 helpers::escape_u16(&mut out, c16);
             }
