@@ -175,7 +175,7 @@ fn sanity_encode() {
     assert_enc("Ꭰ Ꭱ Ꭲ Ꭳ Ꭴ Ꭵ Ꭶ Ꭷ Ꭸ Ꭹ");
     assert_enc("ἀ ἁ ἂ ἃ ἄ ἅ ἆ ἇ Ἀ Ἁ");
     assert_enc("                          ​ ‌ ‍ ‎ ‏ ‐ ");
-    assert_enc("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");;
+    assert_enc("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");
     assert_enc("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
 
     // Test that `\` gets escaped
