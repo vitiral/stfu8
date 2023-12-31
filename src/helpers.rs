@@ -6,9 +6,9 @@
  * copied, modified, or distributed except according to those terms.
  */
 
+use std::fmt::Write;
 use std::u16;
 use std::u32;
-use std::fmt::Write;
 
 /// the only visible character we escape
 pub(crate) const BSLASH: u8 = b'\\';
@@ -48,21 +48,27 @@ pub(crate) fn to_utf32(v: &[u16]) -> u32 {
 pub(crate) fn escape_u8(dst: &mut String, encoder: &super::Encoder, b: u8) {
     match b {
         b'\\' => dst.push_str(r"\\"),
-        b'\t' => if encoder.encode_tab {
-            dst.push_str("\\t");
-        } else {
-            dst.push(b as char);
-        },
-        b'\n' => if encoder.encode_line_feed {
-            dst.push_str("\\n");
-        } else {
-            dst.push(b as char);
-        },
-        b'\r' => if encoder.encode_cariage {
-            dst.push_str("\\r");
-        } else {
-            dst.push(b as char);
-        },
+        b'\t' => {
+            if encoder.encode_tab {
+                dst.push_str("\\t");
+            } else {
+                dst.push(b as char);
+            }
+        }
+        b'\n' => {
+            if encoder.encode_line_feed {
+                dst.push_str("\\n");
+            } else {
+                dst.push(b as char);
+            }
+        }
+        b'\r' => {
+            if encoder.encode_cariage {
+                dst.push_str("\\r");
+            } else {
+                dst.push(b as char);
+            }
+        }
         _ => write!(dst, r"\x{:0>2X}", b).unwrap(),
     }
 }
@@ -103,16 +109,10 @@ mod tests {
         assert_conversions("܀ ܁ ܂ ܃ ܄ ܅ ܆ ܇ ܈ ܉ ܊ ܋ ܌ ܍ ܏", false);
         assert_conversions("Ꭰ Ꭱ Ꭲ Ꭳ Ꭴ Ꭵ Ꭶ Ꭷ Ꭸ Ꭹ", false);
         assert_conversions("ἀ ἁ ἂ ἃ ἄ ἅ ἆ ἇ Ἀ Ἁ", false);
-        assert_conversions(
-            "                          ​ ‌ ‍ ‎ ‏ ‐ ",
-            false,
-        );
+        assert_conversions("                          ​ ‌ ‍ ‎ ‏ ‐ ", false);
         assert_conversions("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “", false);
         assert_conversions("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ", false);
-        assert_conversions(
-            "⟰ ⟱ ⟲ ⟳ ⟴ ⟵ ⟶ ⟷ ⟸ ⟹ ⟺ ⟻ ⟼ ⟽ ⟾ ⟿",
-            false,
-        );
+        assert_conversions("⟰ ⟱ ⟲ ⟳ ⟴ ⟵ ⟶ ⟷ ⟸ ⟹ ⟺ ⟻ ⟼ ⟽ ⟾ ⟿", false);
 
         // suplimentary codes:
         assert_conversions(
