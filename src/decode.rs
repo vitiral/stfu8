@@ -6,32 +6,24 @@
  * copied, modified, or distributed except according to those terms.
  */
 
-use regex::Regex;
 use std::char;
 use std::error::Error;
 use std::fmt;
 
-use helpers::from_hex2;
+use crate::helpers::from_hex2;
+use crate::helpers::from_hex6;
 
-lazy_static! {
-    static ref ESCAPED_RE: Regex = Regex::new(
-        r#"(?x)
-        \\t|                # repr tab
-        \\n|                # repr newline
-        \\r|                # repr linefeed
-        \\\\|               # repr backslash
-        \\x[0-9a-fA-F]{2}|  # repr hex-byte
-        \\u[0-9a-fA-F]{6}|  # repr code point
-        \\                  # INVALID
-        "#
-    )
-    .unwrap();
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DecodeErrorKind {
+    /// A single unescaped backslash was found. Either the following character doesn't
+    /// start a valid escape sequence or it is at the end of the string.
     UnescapedSlash,
+    /// The value from a '\x' or '\u' hexadecimal escape sequence is out of range for the decode.
     InvalidValue,
+    /// There are not enough characters after a '\x' or '\u' to build a escape sequence.
+    HexNumberToShort,
+    /// The required characters after a '\x' or '\u' are not all valid hex digits.
+    InvalidHexDigit,
 }
 
 #[derive(Debug)]
@@ -53,59 +45,98 @@ pub(crate) fn decode_generic<F>(mut push_val: F, s: &str) -> Result<(), DecodeEr
 where
     F: FnMut(PushGeneric) -> Result<(), DecodeError>,
 {
-    // keep track of the last index observed
-    let mut last_end = 0;
-    for mat in ESCAPED_RE.find_iter(s) {
-        let start = mat.start();
-        // push bytes that didn't need to be escaped
-        push_val(PushGeneric::String(&s[last_end..start]))?;
-        if mat.as_str() == "\\" {
-            return Err(DecodeError {
-                index: start,
-                kind: DecodeErrorKind::UnescapedSlash,
-                mat: mat.as_str().to_string(),
-            });
+    let mut string = s;
+    let mut start_index: usize = 0;
+    let mut offset = 0;
+
+    while let Some(byte_index) = string.find('\\') {
+        if byte_index > start_index {
+            push_val(PushGeneric::String(&string[start_index..byte_index]))?;
         }
-
-        let c32 = match &mat.as_str()[..2] {
-            "\\t" => b'\t' as u32,
-            "\\n" => b'\n' as u32,
-            "\\r" => b'\r' as u32,
-            "\\\\" => b'\\' as u32,
-            "\\x" => from_hex2(&mat.as_str().as_bytes()[2..]) as u32,
-            "\\u" => {
-                let hex6 = &mat.as_str().as_bytes()[2..];
-                debug_assert_eq!(6, hex6.len());
-                let d0 = from_hex2(&hex6[0..2]) as u32;
-                let d1 = from_hex2(&hex6[2..4]) as u32;
-                let d2 = from_hex2(&hex6[4..]) as u32;
-
-                let c32 = (d0 << 16) + (d1 << 8) + d2;
-                match char::from_u32(c32) {
-                    Some(c) => {
-                        // It is a valid UTF code point. Always
-                        // decode it as such.
-                        let mut out = String::with_capacity(4);
-                        out.push(c);
-                        push_val(PushGeneric::String(&out))?;
-                        last_end = mat.end();
-                        continue;
-                    }
-                    // It is not a valid code point. Still try
-                    // to record it's value "as is".
-                    None => c32,
+        let rest = string.len() - byte_index;
+        if rest < 2 {
+            Err(DecodeError {
+                index: offset + byte_index,
+                kind: DecodeErrorKind::UnescapedSlash,
+                mat: string[byte_index..].to_string(),
+            })?
+        }
+        let (len, c32) = match &string[byte_index..(byte_index + 2)] {
+            "\\t" => (2, b'\t' as u32),
+            "\\n" => (2, b'\n' as u32),
+            "\\r" => (2, b'\r' as u32),
+            "\\\\" => (2, b'\\' as u32),
+            "\\x" => {
+                if rest < 4 {
+                    Err(DecodeError {
+                        index: offset + byte_index,
+                        kind: DecodeErrorKind::HexNumberToShort,
+                        mat: string[byte_index..].to_string(),
+                    })?
+                } else {
+                    (
+                        4,
+                        from_hex2(&string[(byte_index + 2)..].as_bytes()[..2]).map_or_else(
+                            |_| {
+                                Err(DecodeError {
+                                    index: offset + byte_index,
+                                    kind: DecodeErrorKind::InvalidHexDigit,
+                                    mat: s.to_string(),
+                                    //mat: string[byte_index..].to_string(),
+                                })
+                            },
+                            |x| Ok(x as u32),
+                        )?,
+                    )
                 }
             }
-            _ => unreachable!("disallowed by regex"),
+            "\\u" => {
+                if rest < 8 {
+                    Err(DecodeError {
+                        index: offset + byte_index,
+                        kind: DecodeErrorKind::HexNumberToShort,
+                        mat: string[byte_index..].to_string(),
+                    })?
+                } else {
+                    let hex6 = &string[(byte_index + 2)..byte_index + 8].as_bytes();
+                    debug_assert_eq!(6, hex6.len());
+                    let c32 = from_hex6(hex6).map_err(|_| DecodeError {
+                        index: offset + byte_index,
+                        kind: DecodeErrorKind::InvalidHexDigit,
+                        mat: string[byte_index..].to_string(),
+                    })?;
+                    match char::from_u32(c32) {
+                        Some(c) => {
+                            // It is a valid UTF code point. Always
+                            // decode it as such.
+                            let mut out = String::with_capacity(4);
+                            out.push(c);
+                            push_val(PushGeneric::String(&out))?;
+                            string = &string[(byte_index + 8)..];
+                            start_index = 0;
+                            offset += byte_index + 8;
+                            continue;
+                        }
+                        // It is not a valid code point. Still try
+                        // to record it's value "as is".
+                        None => (8, c32),
+                    }
+                }
+            }
+            _ => Err(DecodeError {
+                index: offset + byte_index,
+                kind: DecodeErrorKind::UnescapedSlash,
+                mat: string[byte_index..].to_string(),
+            })?,
         };
         push_val(PushGeneric::Value {
-            start: mat.start(),
+            start: offset + byte_index,
             val: c32,
         })?;
-        last_end = mat.end();
+        string = &string[(byte_index + len)..];
+        offset += byte_index + len;
     }
-    let len = s.len();
-    push_val(PushGeneric::String(&s[last_end..len]))?;
+    push_val(PushGeneric::String(string))?;
     Ok(())
 }
 
@@ -114,6 +145,8 @@ impl Error for DecodeError {
         match self.kind {
             DecodeErrorKind::UnescapedSlash => r#"Found unmatched '\'. Use "\\" to escape slashes"#,
             DecodeErrorKind::InvalidValue => r#"Escaped value is out of range of the decoder"#,
+            DecodeErrorKind::HexNumberToShort => r#"Not enough characters after "\x" or "\u""#,
+            DecodeErrorKind::InvalidHexDigit => r#"Invalid hex digit after "\x" or "\u""#,
         }
     }
 }
@@ -125,5 +158,70 @@ impl fmt::Display for DecodeError {
             "{} when decoding {:?} [index={}]",
             self.index, self, self.mat
         )
+    }
+}
+
+#[cfg(test)]
+mod error_tests {
+    use crate::{decode::PushGeneric, DecodeError, DecodeErrorKind};
+
+    use super::decode_generic;
+
+    fn do_error_test(string: &str, err_index: usize, err_kind: DecodeErrorKind) {
+        let mut out: Vec<u8> = Vec::new();
+        let f = |val: PushGeneric| -> Result<(), DecodeError> {
+            match val {
+                PushGeneric::Value { val, start: _ } => {
+                    out.push(val as u8);
+                    Ok(())
+                }
+                PushGeneric::String(s) => {
+                    out.extend_from_slice(s.as_bytes());
+                    Ok(())
+                }
+            }
+        };
+
+        let result = decode_generic(f, string);
+
+        assert!(result.is_err());
+        let err = result.err().unwrap();
+        assert_eq!(err_index, err.index);
+        assert_eq!(err_kind, err.kind);
+    }
+
+    #[test]
+    fn test_error_unescaped_backslash() {
+        do_error_test(r"foo\bar", 3, DecodeErrorKind::UnescapedSlash)
+    }
+
+    #[test]
+    fn test_error_unescaped_backslash_2() {
+        do_error_test(r"foo\n\bar", 5, DecodeErrorKind::UnescapedSlash)
+    }
+
+    #[test]
+    fn test_error_unescaped_backslash_end() {
+        do_error_test(r"foo\", 3, DecodeErrorKind::UnescapedSlash)
+    }
+
+    #[test]
+    fn test_error_unescaped_backslash_end_2() {
+        do_error_test(r"foo\nbar\", 8, DecodeErrorKind::UnescapedSlash);
+    }
+
+    #[test]
+    fn test_error_escape_no_digits() {
+        do_error_test(r"foo\nbar\x", 8, DecodeErrorKind::HexNumberToShort);
+    }
+
+    #[test]
+    fn test_error_short_escape() {
+        do_error_test(r"foo\nbar\x1", 8, DecodeErrorKind::HexNumberToShort);
+    }
+
+    #[test]
+    fn test_error_invalid_hex_char() {
+        do_error_test(r"foo\nbar\xax", 8, DecodeErrorKind::InvalidHexDigit);
     }
 }

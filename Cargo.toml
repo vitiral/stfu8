@@ -19,10 +19,6 @@ repository = "https://github.com/vitiral/stfu8"
 travis-ci = { repository = "vitiral/stfu8" }
 appveyor = { repository = "vitiral/stfu8" }
 
-[dependencies]
-regex = ">=0.2.0"
-lazy_static = ">=1.0.0"
-
 [dev-dependencies]
 pretty_assertions = "1.1"
 proptest = "1.0"
