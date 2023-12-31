@@ -27,10 +27,6 @@
 
 #![forbid(unsafe_code)]
 
-#[macro_use]
-extern crate lazy_static;
-extern crate regex;
-
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;

@@ -14,18 +14,6 @@ use std::u32;
 pub(crate) const BSLASH: u8 = b'\\';
 pub(crate) const BSLASH_U16: u16 = BSLASH as u16;
 
-/// create `u8` from two bytes of hex
-pub(crate) fn from_hex2(hex2: &[u8]) -> u8 {
-    debug_assert_eq!(2, hex2.len());
-    (from_hex(hex2[0]) << 4) + from_hex(hex2[1])
-}
-
-#[inline(always)]
-/// Convert a hexidecimal character (`0-F`) into it's corresponding numerical value (0-15)
-fn from_hex(b: u8) -> u8 {
-    (b as char).to_digit(16).unwrap() as u8
-}
-
 const SURROGATE_OFFSET: i64 = 0x1_0000 - (0xD800 << 10) - 0xDC00;
 
 /// Convert from UTF-16 to UTF-32.
@@ -93,7 +81,7 @@ mod tests {
             }
             assert_eq!(expected, c16);
 
-            let c32 = to_utf32(&c16);
+            let c32 = to_utf32(c16);
             assert_eq!(c as u32, c32);
         }
 

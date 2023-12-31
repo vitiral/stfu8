@@ -63,10 +63,9 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
         macro_rules! next {
             () => {{
                 index += 1;
-                // we needed data, but there was none: error!
                 if index >= len {
-                    index -= 1; // added by me
-                    escape_them!(); // orig: err!(None)
+                    index -= 1;
+                    escape_them!();
                 }
                 v[index]
             }};
