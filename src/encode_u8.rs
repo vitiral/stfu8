@@ -25,9 +25,6 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
 
     while index < len {
         let old_offset = index;
-        debug_assert_eq!(b'\t', b'\x09');
-        debug_assert_eq!(b'\n', b'\x0A');
-        debug_assert_eq!(b'\r', b'\x0D');
 
         /// write a single byte that may be ascii.
         /// Escape it correctly no matter what.

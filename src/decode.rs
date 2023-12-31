@@ -49,7 +49,7 @@ pub(crate) enum PushGeneric<'a> {
 }
 
 /// Decode generically
-pub(crate) fn decode_generic<'a, F>(mut push_val: F, s: &'a str) -> Result<(), DecodeError>
+pub(crate) fn decode_generic<F>(mut push_val: F, s: &str) -> Result<(), DecodeError>
 where
     F: FnMut(PushGeneric) -> Result<(), DecodeError>,
 {

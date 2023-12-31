@@ -47,7 +47,7 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u16]) -> String {
                         break;
                     }
                 };
-                if !(TRAIL_MIN <= trail && trail <= TRAIL_MAX) {
+                if !(TRAIL_MIN..=TRAIL_MAX).contains(&trail) {
                     // lead without a trail, just escape it and handle the char on the next
                     // loop
                     helpers::escape_u16(&mut out, c16);
