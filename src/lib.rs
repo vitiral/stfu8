@@ -225,6 +225,11 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                     out.extend_from_slice(s.as_bytes());
                     Ok(())
                 }
+                decode::PushGeneric::Char(c) => {
+                    let mut b = [0u8; 4];
+                    out.extend_from_slice(c.encode_utf8(&mut b).as_bytes());
+                    Ok(())
+                }
             }
         };
         decode::decode_generic(f, s)?;
@@ -288,6 +293,11 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
                         let mut buf = [0u16; 2];
                         out.extend_from_slice(c.encode_utf16(&mut buf));
                     }
+                    Ok(())
+                }
+                decode::PushGeneric::Char(c) => {
+                    let mut b = [0u16; 2];
+                    out.extend_from_slice(c.encode_utf16(&mut b));
                     Ok(())
                 }
             }

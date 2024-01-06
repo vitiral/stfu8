@@ -10,9 +10,6 @@ use std::char;
 use std::error::Error;
 use std::fmt;
 
-use crate::helpers::from_hex2;
-use crate::helpers::from_hex6;
-
 #[derive(Debug, PartialEq)]
 pub enum DecodeErrorKind {
     /// A single unescaped backslash was found. Either the following character doesn't
@@ -38,6 +35,8 @@ pub(crate) enum PushGeneric<'a> {
     Value { start: usize, val: u32 },
     /// Push an always-valid string.
     String(&'a str),
+    /// Push an always-valid character.
+    Char(char),
 }
 
 /// Decode generically
@@ -46,93 +45,95 @@ where
     F: FnMut(PushGeneric) -> Result<(), DecodeError>,
 {
     let mut string = s;
-    let mut start_index: usize = 0;
     let mut offset = 0;
 
     while let Some(byte_index) = string.find('\\') {
-        if byte_index > start_index {
-            push_val(PushGeneric::String(&string[start_index..byte_index]))?;
+        if byte_index > 0 {
+            push_val(PushGeneric::String(&string[..byte_index]))?;
         }
+        // byte index of the backslash in the original string
+        let start_idx = offset + byte_index;
         let rest = string.len() - byte_index;
         if rest < 2 {
             Err(DecodeError {
-                index: offset + byte_index,
+                index: start_idx,
                 kind: DecodeErrorKind::UnescapedSlash,
                 mat: string[byte_index..].to_string(),
             })?
         }
-        let (len, c32) = match &string[byte_index..(byte_index + 2)] {
-            "\\t" => (2, b'\t' as u32),
-            "\\n" => (2, b'\n' as u32),
-            "\\r" => (2, b'\r' as u32),
-            "\\\\" => (2, b'\\' as u32),
-            "\\x" => {
+
+        // macro to create a PushGeneric::Value
+        macro_rules! pg_value {
+            ( $v:expr ) => {{
+                PushGeneric::Value {
+                    start: start_idx,
+                    val: $v as u32,
+                }
+            }};
+        }
+
+        let (len, pg) = match &string.as_bytes()[byte_index + 1] {
+            b't' => (2, pg_value!(b'\t')),
+            b'n' => (2, pg_value!(b'\n')),
+            b'r' => (2, pg_value!(b'\r')),
+            b'\\' => (2, pg_value!(b'\\')),
+            b'x' => {
                 if rest < 4 {
                     Err(DecodeError {
-                        index: offset + byte_index,
+                        index: start_idx,
                         kind: DecodeErrorKind::HexNumberToShort,
                         mat: string[byte_index..].to_string(),
                     })?
-                } else {
-                    (
-                        4,
-                        from_hex2(&string[(byte_index + 2)..].as_bytes()[..2]).map_or_else(
-                            |_| {
-                                Err(DecodeError {
-                                    index: offset + byte_index,
-                                    kind: DecodeErrorKind::InvalidHexDigit,
-                                    mat: s.to_string(),
-                                    //mat: string[byte_index..].to_string(),
-                                })
-                            },
-                            |x| Ok(x as u32),
-                        )?,
-                    )
                 }
+                (
+                    4,
+                    match u32::from_str_radix(&string[(byte_index + 2)..(byte_index + 4)], 16) {
+                        Ok(x) => Ok(pg_value!(x)),
+                        Err(_) => Err(DecodeError {
+                            index: start_idx,
+                            kind: DecodeErrorKind::InvalidHexDigit,
+                            mat: s.to_string(),
+                        }),
+                    }?,
+                )
             }
-            "\\u" => {
+            b'u' => {
                 if rest < 8 {
                     Err(DecodeError {
-                        index: offset + byte_index,
+                        index: start_idx,
                         kind: DecodeErrorKind::HexNumberToShort,
                         mat: string[byte_index..].to_string(),
                     })?
-                } else {
-                    let hex6 = &string[(byte_index + 2)..byte_index + 8].as_bytes();
-                    debug_assert_eq!(6, hex6.len());
-                    let c32 = from_hex6(hex6).map_err(|_| DecodeError {
-                        index: offset + byte_index,
+                }
+                let c32 = match u32::from_str_radix(&string[(byte_index + 2)..(byte_index + 8)], 16)
+                {
+                    Ok(x) => Ok(x),
+                    Err(_) => Err(DecodeError {
+                        index: start_idx,
                         kind: DecodeErrorKind::InvalidHexDigit,
-                        mat: string[byte_index..].to_string(),
-                    })?;
+                        mat: s.to_string(),
+                    }),
+                }?;
+
+                (
+                    8,
                     match char::from_u32(c32) {
-                        Some(c) => {
-                            // It is a valid UTF code point. Always
-                            // decode it as such.
-                            let mut out = String::with_capacity(4);
-                            out.push(c);
-                            push_val(PushGeneric::String(&out))?;
-                            string = &string[(byte_index + 8)..];
-                            start_index = 0;
-                            offset += byte_index + 8;
-                            continue;
-                        }
+                        // It is a valid UTF code point. Always
+                        // decode it as such.
+                        Some(c) => PushGeneric::Char(c),
                         // It is not a valid code point. Still try
                         // to record it's value "as is".
-                        None => (8, c32),
-                    }
-                }
+                        None => pg_value!(c32),
+                    },
+                )
             }
             _ => Err(DecodeError {
-                index: offset + byte_index,
+                index: start_idx,
                 kind: DecodeErrorKind::UnescapedSlash,
                 mat: string[byte_index..].to_string(),
             })?,
         };
-        push_val(PushGeneric::Value {
-            start: offset + byte_index,
-            val: c32,
-        })?;
+        push_val(pg)?;
         string = &string[(byte_index + len)..];
         offset += byte_index + len;
     }
@@ -177,6 +178,11 @@ mod error_tests {
                 }
                 PushGeneric::String(s) => {
                     out.extend_from_slice(s.as_bytes());
+                    Ok(())
+                }
+                PushGeneric::Char(c) => {
+                    let mut b = [0; 4];
+                    out.extend(c.encode_utf8(&mut b).as_bytes());
                     Ok(())
                 }
             }
