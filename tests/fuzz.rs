@@ -5,9 +5,9 @@ extern crate proptest;
 extern crate stfu8;
 
 use std::str;
-use std::u8;
 use std::u16;
 use std::u32;
+use std::u8;
 
 const LEAD_MIN: u16 = 0xD800;
 // const LEAD_MAX: u16 = 0xDBFF;

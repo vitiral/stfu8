@@ -25,47 +25,52 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
 
     while index < len {
         let old_offset = index;
-        debug_assert_eq!(b'\t', b'\x09');
-        debug_assert_eq!(b'\n', b'\x0A');
-        debug_assert_eq!(b'\r', b'\x0D');
 
         /// write a single byte that may be ascii.
         /// Escape it correctly no matter what.
-        macro_rules! maybe_ascii { ($i: expr) => {{
-            let b = v[$i];
-            match b {
-                helpers::BSLASH => helpers::escape_u8(&mut out, encoder, b),
-                0x20..=0x7e => out.push(b as char), // visible ASCII
-                0x00..=0x1F | 0x7f..=0xFF => helpers::escape_u8(&mut out, encoder, b),
-            }
-        }}}
+        macro_rules! maybe_ascii {
+            ($i: expr) => {{
+                let b = v[$i];
+                match b {
+                    helpers::BSLASH => helpers::escape_u8(&mut out, encoder, b),
+                    0x20..=0x7e => out.push(b as char), // visible ASCII
+                    0x00..=0x1F | 0x7f..=0xFF => helpers::escape_u8(&mut out, encoder, b),
+                }
+            }};
+        }
 
         /// Escape everything from `old_offset` to current index.
         /// It is invalid STFU-8 (which might be invalid utf8,
         /// or could just be the `\` character...)
-        macro_rules! escape_them { () => {{
-            for i in old_offset..(index+1) {
-                maybe_ascii!(i);
-            }
-            index += 1;
-            continue;
-        }}}
+        macro_rules! escape_them {
+            () => {{
+                for i in old_offset..(index + 1) {
+                    maybe_ascii!(i);
+                }
+                index += 1;
+                continue;
+            }};
+        }
 
         /// write everything from `old_offset` to current-index -- it
         /// is all valid utf8 and stfu8.
-        macro_rules! write_them { () => {{
-            out.push_str(&str::from_utf8(&v[old_offset..(index+1)]).unwrap());
-        }}}
+        macro_rules! write_them {
+            () => {{
+                out.push_str(&str::from_utf8(&v[old_offset..(index + 1)]).unwrap());
+            }};
+        }
 
-        macro_rules! next { () => {{
-            index += 1;
-            // we needed data, but there was none: error!
-            if index >= len {
-                index -= 1;   // added by me
-                escape_them!(); // orig: err!(None)
-            }
-            v[index]
-        }}}
+        macro_rules! next {
+            () => {{
+                index += 1;
+                // we needed data, but there was none: error!
+                if index >= len {
+                    index -= 1; // added by me
+                    escape_them!(); // orig: err!(None)
+                }
+                v[index]
+            }};
+        }
 
         let first = v[index];
         if first >= 128 {
@@ -134,22 +139,22 @@ pub(crate) fn encode(encoder: &super::Encoder, v: &[u8]) -> String {
 
 // https://tools.ietf.org/html/rfc3629
 static UTF8_CHAR_WIDTH: [u8; 256] = [
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x1F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x3F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x5F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x7F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x9F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xBF
-0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xDF
-3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // 0xEF
-4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0, // 0xFF
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x0F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x1F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x2F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x3F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x4F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x5F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x6F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x7F
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x8F
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x9F
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xAF
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xBF
+    0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // 0xCF
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // 0xDF
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, // 0xEF
+    4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xFF
 ];
 
 /// Mask of the value bits of a continuation byte.

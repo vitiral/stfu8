@@ -6,8 +6,7 @@ extern crate pretty_assertions;
 extern crate proptest;
 extern crate stfu8;
 
-use stfu8::{decode_u8, decode_u16, encode_u8, encode_u8_pretty, encode_u16, encode_u16_pretty};
-
+use stfu8::{decode_u16, decode_u8, encode_u16, encode_u16_pretty, encode_u8, encode_u8_pretty};
 
 use std::str;
 use std::u16;
@@ -33,17 +32,12 @@ fn assert_round_u8(expected: &[u8]) {
     );
 
     let utf16: Vec<u16> = expected.iter().map(|c| u16::from(*c)).collect();
-    assert_eq!(
-        utf16,
-        decode_u16(&encode_u16(&utf16)).unwrap()
-    );
-
+    assert_eq!(utf16, decode_u16(&encode_u16(&utf16)).unwrap());
 }
 
 fn assert_round_str(expected: &str) {
     assert_round_u8(expected.as_bytes());
 }
-
 
 fn assert_text(test: &str) {
     let expected = partial_encode(test);
@@ -61,9 +55,7 @@ fn assert_text(test: &str) {
         assert_eq!(expected, result);
         assert_eq!(utf16.as_slice(), decode_u16(&result).unwrap().as_slice());
     }
-
 }
-
 
 #[test]
 fn sanity_sample_2_0() {
@@ -95,9 +87,7 @@ fn sanity_roundtrip() {
     assert_round_str("܀ ܁ ܂ ܃ ܄ ܅ ܆ ܇ ܈ ܉ ܊ ܋ ܌ ܍ ܏");
     assert_round_str("Ꭰ Ꭱ Ꭲ Ꭳ Ꭴ Ꭵ Ꭶ Ꭷ Ꭸ Ꭹ");
     assert_round_str("ἀ ἁ ἂ ἃ ἄ ἅ ἆ ἇ Ἀ Ἁ");
-    assert_round_str(
-        "                          ​ ‌ ‍ ‎ ‏ ‐ ",
-    );
+    assert_round_str("                          ​ ‌ ‍ ‎ ‏ ‐ ");
     assert_round_str("‑ ‒ – — ― ‖ ‗ ‘ ’ ‚ ‛ “");
     assert_round_str("    ⃐ ⃑ ⃒ ⃓ ⃔ ⃕ ⃖ ⃗ ⃘ ⃙ ⃚ ⃛ ⃜ ⃝ ⃞ ⃟ ⃠ ⃡ ⃢ ⃣ ⃤ ⃥ ⃦ ⃧ ⃨ ⃩ ⃪ ");
 }

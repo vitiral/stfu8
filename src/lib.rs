@@ -35,13 +35,13 @@ extern crate regex;
 #[macro_use]
 extern crate pretty_assertions;
 
-use std::u8;
 use std::u16;
+use std::u8;
 
-mod helpers;
 mod decode;
-mod encode_u8;
 mod encode_u16;
+mod encode_u8;
+mod helpers;
 
 pub use decode::{DecodeError, DecodeErrorKind};
 
@@ -213,7 +213,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
     {
         let f = |val: decode::PushGeneric| -> Result<(), DecodeError> {
             match val {
-                decode::PushGeneric::Value{val, start} => {
+                decode::PushGeneric::Value { val, start } => {
                     if val > u8::MAX as u32 {
                         Err(DecodeError {
                             index: start,
@@ -224,7 +224,7 @@ pub fn decode_u8(s: &str) -> Result<Vec<u8>, DecodeError> {
                         out.push(val as u8);
                         Ok(())
                     }
-                },
+                }
                 decode::PushGeneric::String(s) => {
                     out.extend_from_slice(s.as_bytes());
                     Ok(())
@@ -275,7 +275,7 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
     {
         let f = |val: decode::PushGeneric| -> Result<(), DecodeError> {
             match val {
-                decode::PushGeneric::Value{val, start} => {
+                decode::PushGeneric::Value { val, start } => {
                     if val > u16::MAX as u32 {
                         Err(DecodeError {
                             index: start,
@@ -286,7 +286,7 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
                         out.push(val as u16);
                         Ok(())
                     }
-                },
+                }
                 decode::PushGeneric::String(s) => {
                     for c in s.chars() {
                         let mut buf = [0u16; 2];
@@ -300,7 +300,6 @@ pub fn decode_u16(s: &str) -> Result<Vec<u16>, DecodeError> {
     }
     Ok(out)
 }
-
 
 // NOT YET STABILIZED
 

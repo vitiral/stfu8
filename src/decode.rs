@@ -6,8 +6,8 @@
  * copied, modified, or distributed except according to those terms.
  */
 
-use std::char;
 use regex::Regex;
+use std::char;
 use std::error::Error;
 use std::fmt;
 
@@ -23,7 +23,9 @@ lazy_static! {
         \\x[0-9a-fA-F]{2}|  # repr hex-byte
         \\u[0-9a-fA-F]{6}|  # repr code point
         \\                  # INVALID
-        "#).unwrap();
+        "#
+    )
+    .unwrap();
 }
 
 #[derive(Debug)]
@@ -47,12 +49,9 @@ pub(crate) enum PushGeneric<'a> {
 }
 
 /// Decode generically
-pub(crate) fn decode_generic<'a, F>(
-    mut push_val: F,
-    s: &'a str
-)
--> Result<(), DecodeError>
-    where F: FnMut(PushGeneric) -> Result<(), DecodeError>
+pub(crate) fn decode_generic<F>(mut push_val: F, s: &str) -> Result<(), DecodeError>
+where
+    F: FnMut(PushGeneric) -> Result<(), DecodeError>,
 {
     // keep track of the last index observed
     let mut last_end = 0;
@@ -65,14 +64,14 @@ pub(crate) fn decode_generic<'a, F>(
                 index: start,
                 kind: DecodeErrorKind::UnescapedSlash,
                 mat: mat.as_str().to_string(),
-            })
+            });
         }
 
         let c32 = match &mat.as_str()[..2] {
             "\\t" => b'\t' as u32,
             "\\n" => b'\n' as u32,
             "\\r" => b'\r' as u32,
-            "\\\\" =>b'\\' as u32,
+            "\\\\" => b'\\' as u32,
             "\\x" => from_hex2(&mat.as_str().as_bytes()[2..]) as u32,
             "\\u" => {
                 let hex6 = &mat.as_str().as_bytes()[2..];
@@ -91,7 +90,7 @@ pub(crate) fn decode_generic<'a, F>(
                         push_val(PushGeneric::String(&out))?;
                         last_end = mat.end();
                         continue;
-                    },
+                    }
                     // It is not a valid code point. Still try
                     // to record it's value "as is".
                     None => c32,
@@ -99,7 +98,10 @@ pub(crate) fn decode_generic<'a, F>(
             }
             _ => unreachable!("disallowed by regex"),
         };
-        push_val(PushGeneric::Value {start: mat.start(), val: c32 })?;
+        push_val(PushGeneric::Value {
+            start: mat.start(),
+            val: c32,
+        })?;
         last_end = mat.end();
     }
     let len = s.len();
@@ -118,6 +120,10 @@ impl Error for DecodeError {
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} when decoding {:?} [index={}]", self.index, self, self.mat)
+        write!(
+            f,
+            "{} when decoding {:?} [index={}]",
+            self.index, self, self.mat
+        )
     }
 }
