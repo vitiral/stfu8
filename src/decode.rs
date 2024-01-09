@@ -35,8 +35,6 @@ pub(crate) enum PushGeneric<'a> {
     Value { start: usize, val: u32 },
     /// Push an always-valid string.
     String(&'a str),
-    /// Push an always-valid character.
-    Char(char),
 }
 
 /// Decode generically
@@ -71,12 +69,23 @@ where
                 }
             }};
         }
-
-        let (len, pg) = match &string.as_bytes()[byte_index + 1] {
-            b't' => (2, pg_value!(b'\t')),
-            b'n' => (2, pg_value!(b'\n')),
-            b'r' => (2, pg_value!(b'\r')),
-            b'\\' => (2, pg_value!(b'\\')),
+        let consumed_bytes = match &string.as_bytes()[byte_index + 1] {
+            b't' => {
+                push_val(pg_value!(b'\t'))?;
+                2
+            }
+            b'n' => {
+                push_val(pg_value!(b'\n'))?;
+                2
+            }
+            b'r' => {
+                push_val(pg_value!(b'\r'))?;
+                2
+            }
+            b'\\' => {
+                push_val(pg_value!(b'\\'))?;
+                2
+            }
             b'x' => {
                 if rest < 4 {
                     Err(DecodeError {
@@ -85,17 +94,16 @@ where
                         mat: string[byte_index..].to_string(),
                     })?
                 }
-                (
-                    4,
-                    match u32::from_str_radix(&string[(byte_index + 2)..(byte_index + 4)], 16) {
-                        Ok(x) => Ok(pg_value!(x)),
-                        Err(_) => Err(DecodeError {
-                            index: start_idx,
-                            kind: DecodeErrorKind::InvalidHexDigit,
-                            mat: s.to_string(),
-                        }),
-                    }?,
-                )
+
+                match u32::from_str_radix(&string[(byte_index + 2)..(byte_index + 4)], 16) {
+                    Ok(x) => push_val(pg_value!(x)),
+                    Err(_) => Err(DecodeError {
+                        index: start_idx,
+                        kind: DecodeErrorKind::InvalidHexDigit,
+                        mat: s.to_string(),
+                    }),
+                }?;
+                4
             }
             b'u' => {
                 if rest < 8 {
@@ -105,6 +113,7 @@ where
                         mat: string[byte_index..].to_string(),
                     })?
                 }
+
                 let c32 = match u32::from_str_radix(&string[(byte_index + 2)..(byte_index + 8)], 16)
                 {
                     Ok(x) => Ok(x),
@@ -115,17 +124,15 @@ where
                     }),
                 }?;
 
-                (
-                    8,
-                    match char::from_u32(c32) {
-                        // It is a valid UTF code point. Always
-                        // decode it as such.
-                        Some(c) => PushGeneric::Char(c),
-                        // It is not a valid code point. Still try
-                        // to record it's value "as is".
-                        None => pg_value!(c32),
-                    },
-                )
+                match char::from_u32(c32) {
+                    // It is a valid UTF code point. Always
+                    // decode it as such.
+                    Some(c) => push_val(PushGeneric::String(&c.to_string())),
+                    // It is not a valid code point. Still try
+                    // to record it's value "as is".
+                    None => push_val(pg_value!(c32)),
+                }?;
+                8
             }
             _ => Err(DecodeError {
                 index: start_idx,
@@ -133,9 +140,9 @@ where
                 mat: string[byte_index..].to_string(),
             })?,
         };
-        push_val(pg)?;
-        string = &string[(byte_index + len)..];
-        offset += byte_index + len;
+
+        string = &string[(byte_index + consumed_bytes)..];
+        offset += byte_index + consumed_bytes;
     }
     push_val(PushGeneric::String(string))?;
     Ok(())
@@ -180,11 +187,6 @@ mod error_tests {
                     out.extend_from_slice(s.as_bytes());
                     Ok(())
                 }
-                PushGeneric::Char(c) => {
-                    let mut b = [0; 4];
-                    out.extend(c.encode_utf8(&mut b).as_bytes());
-                    Ok(())
-                }
             }
         };
 
@@ -222,8 +224,13 @@ mod error_tests {
     }
 
     #[test]
-    fn test_error_short_escape() {
+    fn test_error_short_x_escape() {
         do_error_test(r"foo\nbar\x1", 8, DecodeErrorKind::HexNumberToShort);
+    }
+
+    #[test]
+    fn test_error_short_u_escape() {
+        do_error_test(r"foo\nbar\u12345", 8, DecodeErrorKind::HexNumberToShort);
     }
 
     #[test]
